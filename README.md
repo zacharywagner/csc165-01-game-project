@@ -1,1 +1,1 @@
-# CSC165-01GameProject
+# CSC165-01 Game Project
