@@ -5,6 +5,7 @@ import tage.input.InputManager;
 import tage.input.IInputManager.INPUT_ACTION_TYPE;
 import tage.shapes.*;
 
+import java.lang.Math;
 import java.util.ArrayList;
 
 import org.joml.*;
@@ -27,6 +28,8 @@ public class OurGame extends VariableFrameRateGame {
     private TextureImage avatartx;
     // Light declarations
     private Light light1;
+    // Skybox
+    private int fluffyClouds, lakeIslands;
 
     public OurGame() { super(); }
     public static void main(String[] args) {
@@ -38,6 +41,14 @@ public class OurGame extends VariableFrameRateGame {
 
     public GameObject getAvatar() {
         return avatar;
+    }
+    
+    @Override
+    public void loadSkyBoxes() {
+        fluffyClouds = (engine.getSceneGraph()).loadCubeMap("fluffyClouds");
+        lakeIslands = (engine.getSceneGraph()).loadCubeMap("lakeIslands");
+        (engine.getSceneGraph()).setActiveSkyBoxTexture(fluffyClouds);
+        // (engine.getSceneGraph()).setSkyBoxEnabled(true);
     }
 
     @Override
