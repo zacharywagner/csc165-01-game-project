@@ -8,12 +8,13 @@ import org.joml.*;
 public class BackNForthAction extends AbstractInputAction {
     private OurGame game;
     private GameObject avatar;
-    private Camera camera;
+    private ProtocolClient protocolClient;
     private Vector3f oldPos, newPos;
     private Vector4f fwdDirectionAvatar;
 
-    public BackNForthAction(OurGame g) {
+    public BackNForthAction(OurGame g, ProtocolClient p) {
         game = g;
+        protocolClient = p;
     }
 
     @Override
@@ -36,5 +37,8 @@ public class BackNForthAction extends AbstractInputAction {
         }
         newPos = oldPos.add(fwdDirectionAvatar.x(), fwdDirectionAvatar.y(), fwdDirectionAvatar.z());
         avatar.setLocalLocation(newPos);
+        if(protocolClient != null) {
+            protocolClient.sendMoveMessage(avatar.getWorldLocation());
+        }
     }
 }
