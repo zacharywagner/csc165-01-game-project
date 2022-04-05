@@ -30,6 +30,8 @@ public class OurGame extends VariableFrameRateGame {
     private Light light1;
     // Skybox
     private int fluffyClouds, lakeIslands;
+    // Orbit camera controller
+    private CameraOrbit3D orbitController;
 
     public OurGame() { super(); }
     public static void main(String[] args) {
@@ -48,7 +50,7 @@ public class OurGame extends VariableFrameRateGame {
         fluffyClouds = (engine.getSceneGraph()).loadCubeMap("fluffyClouds");
         lakeIslands = (engine.getSceneGraph()).loadCubeMap("lakeIslands");
         (engine.getSceneGraph()).setActiveSkyBoxTexture(fluffyClouds);
-        // (engine.getSceneGraph()).setSkyBoxEnabled(true);
+        (engine.getSceneGraph()).setSkyBoxEnabled(true);
     }
 
     @Override
@@ -82,9 +84,7 @@ public class OurGame extends VariableFrameRateGame {
 
         // setup camera
         Camera cam = (engine.getRenderSystem()).getViewport("MAIN").getCamera();
-        cam.setLocation(new Vector3f(0.0f, 30.0f, 0.0f));
-        cam.setV(new Vector3f(0.0f, 0.0f, 1.0f));
-        cam.setN(new Vector3f(0.0f, -1.0f, 0.0f));
+        orbitController = new CameraOrbit3D(cam, avatar);
 
         // setup inputs
         im = engine.getInputManager();
@@ -92,7 +92,10 @@ public class OurGame extends VariableFrameRateGame {
 
         // movement actions
         BackNForthAction backNForthAction = new BackNForthAction(this);
-        LeftNRightAction leftNRightAction = new LeftNRightAction(this);
+        TurnAction turnAction = new TurnAction(this);
+        OrbitAzimuthAction orbitAzimuthAction = new OrbitAzimuthAction(this);
+        OrbitElevationAction orbitElevationAction = new OrbitElevationAction(this);
+        OrbitZoomAction orbitZoomAction = new OrbitZoomAction(this);
 
         for(Controller c : controllers) {
             if(c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK) {
@@ -103,11 +106,29 @@ public class OurGame extends VariableFrameRateGame {
                     backNForthAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
-                // controller leftnright
+                // controller turn
                 im.associateAction(
                     c,
                     net.java.games.input.Component.Identifier.Axis.X,
-                    leftNRightAction,
+                    turnAction,
+                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
+                im.associateAction(
+                    c,
+                    net.java.games.input.Component.Identifier.Axis.RX,
+                    orbitAzimuthAction,
+                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
+                im.associateAction(
+                    c,
+                    net.java.games.input.Component.Identifier.Axis.RY,
+                    orbitElevationAction,
+                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
+                im.associateAction(
+                    c,
+                    net.java.games.input.Component.Identifier.Axis.Z,
+                    orbitZoomAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
             }
@@ -119,7 +140,12 @@ public class OurGame extends VariableFrameRateGame {
         elapsedTime = System.currentTimeMillis() - prevTime;
         prevTime = System.currentTimeMillis();
 
+        orbitController.updateCameraPosition();
+
         im.update((float)elapsedTime);
     }
     
+    public CameraOrbit3D getCameraController() {
+        return orbitController;
+    }
 }
