@@ -13,6 +13,13 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import java.io.*;
+import java.util.*;
+
 import org.joml.*;
 
 import net.java.games.input.*;
@@ -46,6 +53,19 @@ public class OurGame extends VariableFrameRateGame {
     private ProtocolClient protocolClient;
     private boolean isConnected = false;
 
+    /*==================================================
+      Terrain
+      ==================================================*/
+    private GameObject terrainGameObject;
+    private ObjShape terrainObjShape;
+    private TextureImage terrainTextureImage;
+
+    /*==================================================
+      Scripting
+      ==================================================*/
+    private ScriptEngine jsEngine;
+    private File scriptFile1;
+    
     public OurGame(String serverAddress, int serverPort) {
         super();
         this.serverAddress = serverAddress;
@@ -72,12 +92,18 @@ public class OurGame extends VariableFrameRateGame {
         avatarS = new ImportedModel("dolphinHighPoly.obj");
         ghostS = new Sphere();
         // ghostS = new ImportedModel("dolphinHighPoly.obj");
+    
+        //Load terrain shape(s).
+        terrainObjShape = new TerrainPlane(1000);
     }
     
     @Override
     public void loadTextures() {
         avatartx = new TextureImage("Dolphin_HighPolyUV.png");
         ghosttx = new TextureImage("stripe.png");
+
+        //Load terrain texture image(s).
+        terrainTextureImage = new TextureImage("terrain.png");
     }
 
     @Override
@@ -86,10 +112,25 @@ public class OurGame extends VariableFrameRateGame {
         avatar = new GameObject(GameObject.root(), avatarS, avatartx);
         avatar.setLocalTranslation((new Matrix4f()).translation(0,0,0));
         avatar.setLocalScale((new Matrix4f()).scaling(3.0f));
+
+        //Build terrain game object(s).
+        terrainGameObject = new GameObject(GameObject.root(), terrainObjShape, terrainTextureImage);
+        terrainGameObject.setLocalTranslation(new Matrix4f().translation(0f, 0f, 0f));
+        terrainGameObject.setLocalScale(new Matrix4f().scaling(1f, 1f, 1f));
+        terrainGameObject.setHeightMap(terrainTextureImage);
     }
 
     @Override
     public void initializeGame() {
+        //Initialize the JavaScript scripting engine.
+        ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
+        List<ScriptEngineFactory> scriptEngineFactories = scriptEngineManager.getEngineFactories();
+        jsEngine = scriptEngineManager.getEngineByName("js");
+        //Get the script.js JavaScript file.
+        scriptFile1 = new File("assets/scripts/Script.js");
+        this.runScript(scriptFile1);
+
+
         // setup window
         (engine.getRenderSystem()).setWindowDimensions(1900,1000);
 
@@ -225,4 +266,25 @@ public class OurGame extends VariableFrameRateGame {
 			}
 		}
 	}
+
+    
+	/*==================================================
+	  Scripting
+	  ==================================================*/
+	private void runScript(File scriptFile){ 
+		try{ 
+			FileReader fileReader = new FileReader(scriptFile);
+		    jsEngine.eval(fileReader);
+	        fileReader.close();
+	    }
+	    catch (FileNotFoundException e1){ 
+            System.out.println(scriptFile + " not found " + e1); }
+	    catch (IOException e2){
+            System.out.println("IO problem with " + scriptFile + e2); }
+	    catch (ScriptException e3){ 
+            System.out.println("ScriptException in " + scriptFile + e3); }
+	    catch (NullPointerException e4){ 
+            System.out.println ("Null ptr exception reading " + scriptFile + e4);
+	    } 
+    }
 }
