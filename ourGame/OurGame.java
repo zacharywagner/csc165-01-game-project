@@ -148,12 +148,17 @@ public class OurGame extends VariableFrameRateGame {
         im = engine.getInputManager();
         ArrayList<Controller> controllers = im.getControllers();
 
+        // networking
+        gm = new GhostManager(this);
+        setupNetworking();
+
         // movement actions
         BackNForthAction backNForthAction = new BackNForthAction(this, protocolClient);
         TurnAction turnAction = new TurnAction(this);
         OrbitAzimuthAction orbitAzimuthAction = new OrbitAzimuthAction(this);
         OrbitElevationAction orbitElevationAction = new OrbitElevationAction(this);
         OrbitZoomAction orbitZoomAction = new OrbitZoomAction(this);
+        SendCloseConnectionPacketAction sendCloseConnectionPacketAction = new SendCloseConnectionPacketAction();
 
         for(Controller c : controllers) {
             if(c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK) {
@@ -189,10 +194,14 @@ public class OurGame extends VariableFrameRateGame {
                     orbitZoomAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
+                im.associateAction(
+                    c,
+                    net.java.games.input.Component.Identifier.Button._1,
+                    sendCloseConnectionPacketAction,
+                    INPUT_ACTION_TYPE.ON_PRESS_ONLY
+                );
             }
         }
-
-        setupNetworking();
     }
 
     @Override
