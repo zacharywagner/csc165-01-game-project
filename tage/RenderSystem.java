@@ -235,7 +235,7 @@ public class RenderSystem extends JFrame implements GLEventListener
 
 		gl.glEnable(GL_SCISSOR_TEST);
 		gl.glScissor((int)(vp.getRelativeLeft()*canvasWidth),
-			((int)vp.getRelativeBottom()*canvasHeight),
+			(int)(vp.getRelativeBottom()*canvasHeight),
 			(int)vp.getActualWidth(),
 			(int)vp.getActualHeight());
 		gl.glClear(GL_COLOR_BUFFER_BIT);
@@ -246,13 +246,13 @@ public class RenderSystem extends JFrame implements GLEventListener
 			float[] color = vp.getBorderColor();
 			gl.glEnable(GL_SCISSOR_TEST);
 			gl.glScissor((int)(vp.getRelativeLeft()*canvasWidth),
-				((int)vp.getRelativeBottom()*canvasHeight),
+				(int)(vp.getRelativeBottom()*canvasHeight),
 				(int)vp.getActualWidth(),
 				(int)vp.getActualHeight());
 			gl.glClearColor(color[0], color[1], color[2], 1.0f);
 			gl.glClear(GL_COLOR_BUFFER_BIT);
 			gl.glScissor((int)(vp.getRelativeLeft()*canvasWidth)+borderWidth,
-				((int)vp.getRelativeBottom()*canvasHeight)+borderWidth,
+				(int)(vp.getRelativeBottom()*canvasHeight)+borderWidth,
 				(int)vp.getActualWidth()-borderWidth*2,
 				(int)vp.getActualHeight()-borderWidth*2);
 			gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
