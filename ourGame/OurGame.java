@@ -53,19 +53,6 @@ public class OurGame extends VariableFrameRateGame {
     private ProtocolClient protocolClient;
     private boolean isConnected = false;
 
-    /*==================================================
-      Terrain
-      ==================================================*/
-    private GameObject terrainGameObject;
-    private ObjShape terrainObjShape;
-    private TextureImage terrainTextureImage;
-
-    /*==================================================
-      Scripting
-      ==================================================*/
-    private ScriptEngine jsEngine;
-    private File scriptFile1;
-    
     public OurGame(String serverAddress, int serverPort) {
         super();
         this.serverAddress = serverAddress;
@@ -94,7 +81,7 @@ public class OurGame extends VariableFrameRateGame {
         // ghostS = new ImportedModel("dolphinHighPoly.obj");
     
         //Load terrain shape(s).
-        terrainObjShape = new TerrainPlane(1000);
+        terrainObjShape = new TerrainPlane(2048);
     }
     
     @Override
@@ -103,7 +90,8 @@ public class OurGame extends VariableFrameRateGame {
         ghosttx = new TextureImage("stripe.png");
 
         //Load terrain texture image(s).
-        terrainTextureImage = new TextureImage("terrain.png");
+        heightMapTextureImage = new TextureImage("heightMap.png");
+        terrainTextureImage = new TextureImage("mountains1.png");
     }
 
     @Override
@@ -114,25 +102,17 @@ public class OurGame extends VariableFrameRateGame {
         avatar.setLocalScale((new Matrix4f()).scaling(3.0f));
 
         //Build terrain game object(s).
-        terrainGameObject = new GameObject(GameObject.root(), terrainObjShape, terrainTextureImage);
+        terrainGameObject = new GameObject(GameObject.root(), terrainObjShape);
         terrainGameObject.setLocalTranslation(new Matrix4f().translation(0f, 0f, 0f));
-        terrainGameObject.setLocalScale(new Matrix4f().scaling(1f, 1f, 1f));
-        terrainGameObject.setHeightMap(terrainTextureImage);
+        terrainGameObject.setHeightMap(heightMapTextureImage);
     }
 
     @Override
     public void initializeGame() {
         //Initialize the JavaScript scripting engine.
-        ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-        List<ScriptEngineFactory> scriptEngineFactories = scriptEngineManager.getEngineFactories();
-        jsEngine = scriptEngineManager.getEngineByName("js");
-        //Get the script.js JavaScript file.
-        scriptFile1 = new File("assets/scripts/Script.js");
-        this.runScript(scriptFile1);
+        initializeScripts();
 
-
-        // setup window
-        (engine.getRenderSystem()).setWindowDimensions(1900,1000);
+        (engine.getRenderSystem()).setWindowDimensions(1280,720);
 
         // setup light
         Light.setGlobalAmbient(0.5f, 0.5f, 0.5f);
@@ -267,24 +247,56 @@ public class OurGame extends VariableFrameRateGame {
 		}
 	}
 
-    
+    /*==================================================
+	    Time
+    ==================================================*/
+    private long frameTime;
+    private long totalTime;
+
+    private void updateTimes(){
+        frameTime = System.currentTimeMillis() - totalTime;
+		totalTime = System.currentTimeMillis();
+    }
+
+    /*==================================================
+	    Terrain
+    ==================================================*/
+    private TextureImage heightMapTextureImage;
+    private GameObject terrainGameObject;
+    private ObjShape terrainObjShape;
+    private TextureImage terrainTextureImage;
+
 	/*==================================================
-	  Scripting
-	  ==================================================*/
-	private void runScript(File scriptFile){ 
-		try{ 
-			FileReader fileReader = new FileReader(scriptFile);
-		    jsEngine.eval(fileReader);
-	        fileReader.close();
-	    }
-	    catch (FileNotFoundException e1){ 
-            System.out.println(scriptFile + " not found " + e1); }
-	    catch (IOException e2){
-            System.out.println("IO problem with " + scriptFile + e2); }
-	    catch (ScriptException e3){ 
-            System.out.println("ScriptException in " + scriptFile + e3); }
-	    catch (NullPointerException e4){ 
-            System.out.println ("Null ptr exception reading " + scriptFile + e4);
-	    } 
+	    Scripting
+	==================================================*/
+    private ScriptEngine scriptEngine;
+      
+    private void initializeScripts(){
+        ScriptEngineManager factory = new ScriptEngineManager();
+		scriptEngine = factory.getEngineByName("js");
+        File file = new File("assets/scripts/Script.js");
+        this.runScript(scriptEngine, file);
+        Vector3f terrainLocalScale = (Vector3f)(scriptEngine.get("terrainLocalScale"));
+        terrainGameObject.setLocalScale(new Matrix4f().scaling(terrainLocalScale));
+    }
+
+    private void runScript(ScriptEngine scriptEngine, File file){
+        try{ 
+            FileReader fileReader = new FileReader(file);
+            scriptEngine.eval(fileReader); 
+            fileReader.close();
+        }
+        catch (FileNotFoundException fileNotFoundException){ 
+            System.out.println(file + " not found " + fileNotFoundException); 
+        }
+        catch (IOException ioException){ 
+            System.out.println("IO exception in " + file + ioException); 
+        }
+        catch (ScriptException scriptException){ 
+            System.out.println("Script exception in " + file + scriptException); 
+        }
+        catch (NullPointerException nullPointerException){ 
+            System.out.println ("Null pointer exception in " + file + nullPointerException); 
+        }
     }
 }
