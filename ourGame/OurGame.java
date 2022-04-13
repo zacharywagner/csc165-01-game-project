@@ -89,7 +89,7 @@ public class OurGame extends VariableFrameRateGame {
 
     @Override
     public void loadShapes() {
-        avatarS = new ImportedModel("dolphinHighPoly.obj");
+        avatarS = new ImportedModel("test.obj");
         ghostS = new Sphere();
         // ghostS = new ImportedModel("dolphinHighPoly.obj");
     
@@ -99,7 +99,7 @@ public class OurGame extends VariableFrameRateGame {
     
     @Override
     public void loadTextures() {
-        avatartx = new TextureImage("Dolphin_HighPolyUV.png");
+        avatartx = new TextureImage("test.png");
         ghosttx = new TextureImage("stripe.png");
 
         //Load terrain texture image(s).
@@ -111,7 +111,7 @@ public class OurGame extends VariableFrameRateGame {
         // build avatar
         avatar = new GameObject(GameObject.root(), avatarS, avatartx);
         avatar.setLocalTranslation((new Matrix4f()).translation(0,0,0));
-        avatar.setLocalScale((new Matrix4f()).scaling(3.0f));
+        avatar.setLocalScale((new Matrix4f()).scaling(1.0f));
 
         //Build terrain game object(s).
         terrainGameObject = new GameObject(GameObject.root(), terrainObjShape, terrainTextureImage);
