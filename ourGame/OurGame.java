@@ -89,7 +89,7 @@ public class OurGame extends VariableFrameRateGame {
 
     @Override
     public void loadShapes() {
-        avatarS = new ImportedModel("test.obj");
+        avatarS = new ImportedModel("playership.obj");
         ghostS = new Sphere();
         // ghostS = new ImportedModel("dolphinHighPoly.obj");
     
@@ -99,7 +99,7 @@ public class OurGame extends VariableFrameRateGame {
     
     @Override
     public void loadTextures() {
-        avatartx = new TextureImage("test.png");
+        avatartx = new TextureImage("playership.png");
         ghosttx = new TextureImage("stripe.png");
 
         //Load terrain texture image(s).
