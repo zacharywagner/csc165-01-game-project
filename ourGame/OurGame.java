@@ -152,15 +152,35 @@ public class OurGame extends VariableFrameRateGame {
         gm = new GhostManager(this);
         setupNetworking();
 
-        // movement actions
+        // keyboard actions
+        LeftAction leftAction = new LeftAction(this, protocolClient);
+        RightAction rightAction = new RightAction(this, protocolClient);
+        // controller actions
         BackNForthAction backNForthAction = new BackNForthAction(this, protocolClient);
-        TurnAction turnAction = new TurnAction(this);
+        LeftNRightAction leftNRightAction = new LeftNRightAction(this, protocolClient);
+        // TurnAction turnAction = new TurnAction(this);
         OrbitAzimuthAction orbitAzimuthAction = new OrbitAzimuthAction(this);
         OrbitElevationAction orbitElevationAction = new OrbitElevationAction(this);
         OrbitZoomAction orbitZoomAction = new OrbitZoomAction(this);
         SendCloseConnectionPacketAction sendCloseConnectionPacketAction = new SendCloseConnectionPacketAction();
 
         for(Controller c : controllers) {
+            if(c.getType() == Controller.Type.KEYBOARD) {
+                // keyboard left
+                im.associateAction(
+                    c,
+                    net.java.games.input.Component.Identifier.Key.LEFT,
+                    leftAction,
+                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
+                // keyboard right
+                im.associateAction(
+                    c,
+                    net.java.games.input.Component.Identifier.Key.RIGHT,
+                    rightAction,
+                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
+            }
             if(c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK) {
                 // controller backnforth
                 im.associateAction(
@@ -169,25 +189,37 @@ public class OurGame extends VariableFrameRateGame {
                     backNForthAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
+                // controller leftnright
+                im.associateAction(
+                    c,
+                    net.java.games.input.Component.Identifier.Axis.X,
+                    leftNRightAction,
+                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
                 // controller turn
+                /*
                 im.associateAction(
                     c,
                     net.java.games.input.Component.Identifier.Axis.X,
                     turnAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
+                */
+                // controller orbit azimuth
                 im.associateAction(
                     c,
                     net.java.games.input.Component.Identifier.Axis.RX,
                     orbitAzimuthAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
+                // controller orbit elevation
                 im.associateAction(
                     c,
                     net.java.games.input.Component.Identifier.Axis.RY,
                     orbitElevationAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
+                // controller orbit zoom
                 im.associateAction(
                     c,
                     net.java.games.input.Component.Identifier.Axis.Z,
