@@ -142,7 +142,13 @@ public class OurGame extends VariableFrameRateGame {
 
         // setup camera
         Camera cam = (engine.getRenderSystem()).getViewport("MAIN").getCamera();
-        orbitController = new CameraOrbit3D(cam, avatar);
+        orbitController = new CameraOrbit3D(
+                                  cam,
+                                  avatar,
+                                  (float)(((Double)(jsEngine.get("startingAzimuth"))).floatValue()),
+                                  (float)(((Double)(jsEngine.get("startingElevation"))).floatValue()),
+                                  (float)(((Double)(jsEngine.get("startingRadius"))).floatValue())
+                                  );
 
         // setup inputs
         im = engine.getInputManager();
@@ -160,10 +166,9 @@ public class OurGame extends VariableFrameRateGame {
         // controller actions
         BackNForthAction backNForthAction = new BackNForthAction(this, protocolClient);
         LeftNRightAction leftNRightAction = new LeftNRightAction(this, protocolClient);
-        // TurnAction turnAction = new TurnAction(this);
-        OrbitAzimuthAction orbitAzimuthAction = new OrbitAzimuthAction(this);
+        // OrbitAzimuthAction orbitAzimuthAction = new OrbitAzimuthAction(this);
         OrbitElevationAction orbitElevationAction = new OrbitElevationAction(this);
-        OrbitZoomAction orbitZoomAction = new OrbitZoomAction(this);
+        // OrbitZoomAction orbitZoomAction = new OrbitZoomAction(this);
         SendCloseConnectionPacketAction sendCloseConnectionPacketAction = new SendCloseConnectionPacketAction();
 
         for(Controller c : controllers) {
@@ -212,22 +217,15 @@ public class OurGame extends VariableFrameRateGame {
                     leftNRightAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
-                // controller turn
-                /*
-                im.associateAction(
-                    c,
-                    net.java.games.input.Component.Identifier.Axis.X,
-                    turnAction,
-                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
-                );
-                */
                 // controller orbit azimuth
+                /*
                 im.associateAction(
                     c,
                     net.java.games.input.Component.Identifier.Axis.RX,
                     orbitAzimuthAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
+                */
                 // controller orbit elevation
                 im.associateAction(
                     c,
@@ -236,12 +234,14 @@ public class OurGame extends VariableFrameRateGame {
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
                 // controller orbit zoom
+                /*
                 im.associateAction(
                     c,
                     net.java.games.input.Component.Identifier.Axis.Z,
                     orbitZoomAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
+                */
                 im.associateAction(
                     c,
                     net.java.games.input.Component.Identifier.Button._1,

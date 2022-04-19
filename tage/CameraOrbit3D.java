@@ -31,7 +31,27 @@ public class CameraOrbit3D {
         this.target = target;
         cameraAzimuth = 0.0f;
         cameraElevation = 20.0f;
-        cameraRadius = 2.0f;
+        cameraRadius = 20.0f;
+        updateCameraPosition();
+    }
+    
+    /**
+     * Creates a CameraOrbit3D object which acts as an orbit camera controller
+     * for the given GameObject with a custom set of starting values.
+     * 
+     * 
+     * @param cam The camera which will orbit the GameObject
+     * @param target The GameObject to follow with the camera
+     * @param azm The starting azimuth (left and right) value
+     * @param elv The starting elevation (up and down) value
+     * @param rad The starting radius (zoom) value
+     */
+    public CameraOrbit3D(Camera cam, GameObject target, float azm, float elv, float rad) {
+        camera = cam;
+        this.target = target;
+        cameraAzimuth = azm;
+        cameraElevation = elv;
+        cameraRadius = rad;
         updateCameraPosition();
     }
 
