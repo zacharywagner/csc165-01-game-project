@@ -41,7 +41,7 @@ public class OurGame extends VariableFrameRateGame {
     // Light declarations
     private Light light1;
     // Skybox
-    private int fluffyClouds, lakeIslands;
+    private int redSpace;
     // Orbit camera controller
     private CameraOrbit3D orbitController;
 
@@ -82,9 +82,8 @@ public class OurGame extends VariableFrameRateGame {
     
     @Override
     public void loadSkyBoxes() {
-        fluffyClouds = (engine.getSceneGraph()).loadCubeMap("fluffyClouds");
-        lakeIslands = (engine.getSceneGraph()).loadCubeMap("lakeIslands");
-        (engine.getSceneGraph()).setActiveSkyBoxTexture(fluffyClouds);
+        redSpace = (engine.getSceneGraph()).loadCubeMap("redSpace");
+        (engine.getSceneGraph()).setActiveSkyBoxTexture(redSpace);
         (engine.getSceneGraph()).setSkyBoxEnabled(true);
     }
 
