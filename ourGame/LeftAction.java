@@ -30,7 +30,7 @@ public class LeftAction extends AbstractInputAction {
         rightDirectionAvatar.mul(avatar.getWorldRotation());
 
         if(keyValue > 0.2) {
-            rightDirectionAvatar.mul(0.005f * time);
+            rightDirectionAvatar.mul((float)game.getPlayerSpeed() * time);
         }
         newPos = oldPos.add(rightDirectionAvatar.x(), rightDirectionAvatar.y(), rightDirectionAvatar.z());
         avatar.setLocalLocation(newPos);

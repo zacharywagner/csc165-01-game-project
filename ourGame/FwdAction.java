@@ -5,14 +5,14 @@ import tage.input.action.AbstractInputAction;
 import net.java.games.input.Event;
 import org.joml.*;
 
-public class BackNForthAction extends AbstractInputAction {
+public class FwdAction extends AbstractInputAction {
     private OurGame game;
     private GameObject avatar;
     private ProtocolClient protocolClient;
     private Vector3f oldPos, newPos;
     private Vector4f fwdDirectionAvatar;
 
-    public BackNForthAction(OurGame g, ProtocolClient p) {
+    public FwdAction(OurGame g, ProtocolClient p) {
         game = g;
         protocolClient = p;
     }
@@ -29,11 +29,8 @@ public class BackNForthAction extends AbstractInputAction {
         fwdDirectionAvatar = new Vector4f(0f,0f,1f,1f);
         fwdDirectionAvatar.mul(avatar.getWorldRotation());
 
-        if(keyValue < -0.2) {
+        if(keyValue > 0.2) {
             fwdDirectionAvatar.mul((float)game.getPlayerSpeed() * time);
-        }
-        else {
-            fwdDirectionAvatar.mul((float)-game.getPlayerSpeed() * time);
         }
         newPos = oldPos.add(fwdDirectionAvatar.x(), fwdDirectionAvatar.y(), fwdDirectionAvatar.z());
         avatar.setLocalLocation(newPos);

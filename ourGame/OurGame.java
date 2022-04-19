@@ -64,7 +64,8 @@ public class OurGame extends VariableFrameRateGame {
       Scripting
       ==================================================*/
     private ScriptEngine jsEngine;
-    private File scriptFile1;
+    private File initScript;
+    private long fileLastModifiedTime = 0;
     
     public OurGame(String serverAddress, int serverPort) {
         super();
@@ -122,14 +123,14 @@ public class OurGame extends VariableFrameRateGame {
 
     @Override
     public void initializeGame() {
-        //Initialize the JavaScript scripting engine.
+        // Initialize the JavaScript scripting engine.
         ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
         List<ScriptEngineFactory> scriptEngineFactories = scriptEngineManager.getEngineFactories();
         jsEngine = scriptEngineManager.getEngineByName("js");
-        //Get the script.js JavaScript file.
-        scriptFile1 = new File("assets/scripts/Script.js");
-        this.runScript(scriptFile1);
-
+        
+        // Get the init.js JavaScript file and initialize parameters.
+        initScript = new File("assets/scripts/init.js");
+        this.runScript(initScript);
 
         // setup window
         (engine.getRenderSystem()).setWindowDimensions(1900,1000);
@@ -155,6 +156,8 @@ public class OurGame extends VariableFrameRateGame {
         // keyboard actions
         LeftAction leftAction = new LeftAction(this, protocolClient);
         RightAction rightAction = new RightAction(this, protocolClient);
+        FwdAction fwdAction = new FwdAction(this, protocolClient);
+        BackAction backAction = new BackAction(this, protocolClient);
         // controller actions
         BackNForthAction backNForthAction = new BackNForthAction(this, protocolClient);
         LeftNRightAction leftNRightAction = new LeftNRightAction(this, protocolClient);
@@ -178,6 +181,20 @@ public class OurGame extends VariableFrameRateGame {
                     c,
                     net.java.games.input.Component.Identifier.Key.RIGHT,
                     rightAction,
+                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
+                // keyboard fwd
+                im.associateAction(
+                    c,
+                    net.java.games.input.Component.Identifier.Key.UP,
+                    fwdAction,
+                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
+                // keyboard back
+                im.associateAction(
+                    c,
+                    net.java.games.input.Component.Identifier.Key.DOWN,
+                    backAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
             }
@@ -238,12 +255,46 @@ public class OurGame extends VariableFrameRateGame {
 
     @Override
     public void update() {
+        // update elapsed time
         elapsedTime = System.currentTimeMillis() - prevTime;
         prevTime = System.currentTimeMillis();
 
+        // build HUD
+        String playerHealthStr = (jsEngine.get("playerHealth")).toString();
+        String display = "Player Health: = " + playerHealthStr;
+
+        double red = ((Double)(jsEngine.get("red"))).floatValue();
+        double green = ((Double)(jsEngine.get("green"))).floatValue();
+        double blue = ((Double)(jsEngine.get("blue"))).floatValue();
+
+        Vector3f hudColor = new Vector3f((float)red, (float)green, (float)blue);
+
+        float mainRelativeLeft = engine.getRenderSystem().getViewport("MAIN").getRelativeLeft();
+        float mainRelativeBottom = engine.getRenderSystem().getViewport("MAIN").getRelativeBottom();
+        float mainActualWidth = engine.getRenderSystem().getViewport("MAIN").getActualWidth();
+        float mainActualHeight = engine.getRenderSystem().getViewport("MAIN").getActualHeight();
+
+        (engine.getHUDmanager()).setHUD1(
+            display,
+            hudColor,
+            (int)(mainRelativeLeft * mainActualWidth) + 5,
+            (int)(mainRelativeBottom * mainActualHeight) + 5
+            );
+
+        // update camera
         orbitController.updateCameraPosition();
 
+        // update scripting values
+        long modTime = initScript.lastModified();
+        if(modTime > fileLastModifiedTime) {
+            fileLastModifiedTime = modTime;
+            this.runScript(initScript);
+        }
+
+        // update inputs
         im.update((float)elapsedTime);
+
+        // update networking
         processNetworking((float)elapsedTime);
     }
     
@@ -269,6 +320,10 @@ public class OurGame extends VariableFrameRateGame {
 
     public Vector3f getPlayerPosition() {
         return avatar.getWorldLocation();
+    }
+
+    public double getPlayerSpeed() {
+        return ((Double)(jsEngine.get("playerSpeed"))).floatValue();
     }
 
     public void setIsConnected(boolean set) {
