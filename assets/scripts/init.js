@@ -11,3 +11,12 @@ var playerSpeed = 0.01;
 var red = 0.0;
 var green = 0.75;
 var blue = 0.25;
+
+var JavaPackages = new JavaImporter(
+    Packages.org.joml.Vector3f
+);
+
+with(JavaPackages){
+    var terrainLocalScale = new Vector3f(80.0, 12.0, 80.0);
+    var terrainLocalLocation = new Vector3f(0.0, -8.0, 0.0)
+}

@@ -67,6 +67,7 @@ public class OurGame extends VariableFrameRateGame {
     private GameObject terrainGameObject;
     private ObjShape terrainObjShape;
     private TextureImage terrainTextureImage;
+    private TextureImage heightMapTextureImage;
 
     /*==================================================
       Scripting
@@ -81,6 +82,7 @@ public class OurGame extends VariableFrameRateGame {
     private PhysicsEngine physicsEngine;
     private boolean running = true;
     private PhysicsObject playerPhysicsObject;
+    private float vals[] = new float[16];
 
     //
     // Enemies
@@ -118,7 +120,7 @@ public class OurGame extends VariableFrameRateGame {
         ghostS = new ImportedModel("playership.obj");
     
         //Load terrain shape(s).
-        terrainObjShape = new TerrainPlane(1000);
+        terrainObjShape = new TerrainPlane(2048);
 
         //Load the enemies' models.
         rammerImportedModel = new ImportedModel("rammer.obj");
@@ -131,7 +133,8 @@ public class OurGame extends VariableFrameRateGame {
         ghosttx = new TextureImage("playership.png");
 
         //Load terrain texture image(s).
-        terrainTextureImage = new TextureImage("terrain.png");
+        terrainTextureImage = new TextureImage("mountains1.png");
+        heightMapTextureImage = new TextureImage("mountains1.png");
 
         //Load the enemies' texture images.
         rammerTextureImage = new TextureImage("rammer.png");
@@ -148,10 +151,12 @@ public class OurGame extends VariableFrameRateGame {
         terrainGameObject = new GameObject(GameObject.root(), terrainObjShape, terrainTextureImage);
         terrainGameObject.setLocalTranslation(new Matrix4f().translation(0f, 0f, 0f));
         terrainGameObject.setLocalScale(new Matrix4f().scaling(1f, 1f, 1f));
-        terrainGameObject.setHeightMap(terrainTextureImage);
+        terrainGameObject.setHeightMap(heightMapTextureImage);
 
         //Build an enemy as a test.
         rammerGameObject = new GameObject(GameObject.root(), rammerImportedModel, rammerTextureImage);
+        rammerGameObject.setLocalTranslation(new Matrix4f().translation(0f, 0f, 0f));
+
     }
 
     @Override
@@ -164,6 +169,12 @@ public class OurGame extends VariableFrameRateGame {
         // Get the init.js JavaScript file and initialize parameters.
         initScript = new File("assets/scripts/init.js");
         this.runScript(initScript);
+
+        Vector3f terrainLocalScale = (Vector3f)(jsEngine.get("terrainLocalScale"));
+        terrainGameObject.setLocalScale(new Matrix4f().scaling(terrainLocalScale));
+        Vector3f terrainLocalLocation = (Vector3f)(jsEngine.get("terrainLocalLocation"));
+        System.out.println(terrainLocalLocation.y);
+        terrainGameObject.setLocalLocation(terrainLocalLocation);
 
         // setup window
         (engine.getRenderSystem()).setWindowDimensions(1900,1000);
@@ -288,7 +299,7 @@ public class OurGame extends VariableFrameRateGame {
 
         //PHYSICS
         String engine = "tage.physics.JBullet.JBulletPhysicsEngine";
-        float[] gravity = {0f, -5f, 0f};
+        float[] gravity = {0f, 0f, 0f};
         physicsEngine = PhysicsEngineFactory.createPhysicsEngine(engine);
         physicsEngine.initSystem();
         physicsEngine.setGravity(gravity);
@@ -297,11 +308,15 @@ public class OurGame extends VariableFrameRateGame {
         float vals[] = new float[16];
         double[] transform = toDoubleArray(avatar.getLocalTranslation().get(vals));
         playerPhysicsObject = physicsEngine.addBoxObject(physicsEngine.nextUID(), 1f, transform, new float[]{1f, 1f, 1f});
+        playerPhysicsObject.setBounciness(0f);
+        playerPhysicsObject.setFriction(0f);
         avatar.setPhysicsObject(playerPhysicsObject);
 
         //Adding a collider to the test enemy.
         transform = toDoubleArray(rammerGameObject.getLocalTranslation().get(vals));
         rammerPhysicsObject = physicsEngine.addBoxObject(physicsEngine.nextUID(), 1f, transform, new float[]{1f, 1f, 1f});
+        rammerPhysicsObject.setBounciness(0f);
+        rammerPhysicsObject.setFriction(0f);
         rammerGameObject.setPhysicsObject(rammerPhysicsObject);
     }
 
@@ -310,33 +325,6 @@ public class OurGame extends VariableFrameRateGame {
         // update elapsed time
         elapsedTime = System.currentTimeMillis() - prevTime;
         prevTime = System.currentTimeMillis();
-
-
-        //
-        // UPDATE PHYSICS
-        //
-
-        if(running){
-            Matrix4f mat = new Matrix4f();
-            Matrix4f mat2 = new Matrix4f().identity();
-            checkForCollisions();
-            physicsEngine.update((float)elapsedTime);
-            /*
-            for (GameObject go:engine.getSceneGraph().getGameObjects()){
-                if (go.getPhysicsObject() != null){ 
-                    mat.set(toFloatArray(go.getPhysicsObject().getTransform()));
-                    mat2.set(3,0,mat.m30());
-                    mat2.set(3,1,mat.m31());
-                    mat2.set(3,2,mat.m32());
-                    go.setLocalTranslation(mat2);
-                } 
-            }
-            */
-        }
-
-        //
-        // PHYSICS UPDATED
-        //
 
         // build HUD
         String playerHealthStr = (jsEngine.get("playerHealth")).toString();
@@ -372,6 +360,68 @@ public class OurGame extends VariableFrameRateGame {
 
         // update inputs
         im.update((float)elapsedTime);
+
+        //
+        // UPDATE PHYSICS
+        //
+
+        double[] transform = toDoubleArray(avatar.getLocalTranslation().get(vals));
+        avatar.getPhysicsObject().setTransform(transform);
+        //System.out.println(avatar.getPhysicsObject().getTransform());
+        //avatar.getPhysicsObject().setSleepThresholds(0f, 0f);
+        avatar.getPhysicsObject().setLinearVelocity(new float[]{0f, 1f, 0f});
+
+        Vector3f loc = rammerGameObject.getLocalLocation();
+        loc.x += 0.01f;
+        rammerGameObject.setLocalLocation(loc);
+        transform = toDoubleArray(rammerGameObject.getLocalTranslation().get(vals));
+        rammerGameObject.getPhysicsObject().setTransform(transform);
+        //rammerGameObject.getPhysicsObject().setSleepThresholds(0f, 0f);
+        rammerGameObject.getPhysicsObject().setLinearVelocity(new float[]{0f, 1f, 0f});
+
+        if(running){
+            Matrix4f mat = new Matrix4f();
+            Matrix4f mat2 = new Matrix4f().identity();
+            checkForCollisions();
+            physicsEngine.update((float)elapsedTime);
+            for (GameObject go:engine.getSceneGraph().getGameObjects()){
+                if (go.getPhysicsObject() != null){ 
+                    //mat.set(toFloatArray(go.getPhysicsObject().getTransform()));
+                    //mat2.set(3,0,mat.m30());
+                    //mat2.set(3,1,0f);
+                    //mat2.set(3,2,mat.m32());
+                    //go.setLocalTranslation(mat2);
+                    go.getPhysicsObject().setLinearVelocity(new float[]{0f, 1f, 0f});
+                    go.getPhysicsObject().setAngularVelocity(new float[]{0f, 1f, 0f});
+                } 
+            }
+        }
+
+        transform = toDoubleArray(avatar.getLocalTranslation().get(vals));
+        avatar.getPhysicsObject().setTransform(transform);
+        //System.out.println(avatar.getPhysicsObject().getTransform());
+        //avatar.getPhysicsObject().setSleepThresholds(0f, 0f);
+
+        loc = rammerGameObject.getLocalLocation();
+        loc.x += 0.001f;
+        rammerGameObject.setLocalLocation(loc);
+        transform = toDoubleArray(rammerGameObject.getLocalTranslation().get(vals));
+        rammerGameObject.getPhysicsObject().setTransform(transform);
+        //rammerGameObject.getPhysicsObject().setSleepThresholds(0f, 0f);
+
+
+        //PHYSICS WITH TERRAIN
+        Vector3f location = avatar.getWorldLocation();
+        float height = terrainGameObject.getHeight(location.x, location.z);
+        height += terrainGameObject.getWorldLocation().y;
+        System.out.println("height = " + height + " y = " + avatar.getWorldLocation().y);
+        if(avatar.getWorldLocation().y < height){
+            System.out.println("BOOM! The spaceship is colliding with the terrain.");
+        }
+
+        //
+        // PHYSICS UPDATED
+        //
 
         // update networking
         processNetworking((float)elapsedTime);
@@ -475,8 +525,7 @@ public class OurGame extends VariableFrameRateGame {
         com.bulletphysics.collision.narrowphase.PersistentManifold manifold;
         com.bulletphysics.dynamics.RigidBody object1, object2;
         com.bulletphysics.collision.narrowphase.ManifoldPoint contactPoint;
-        dynamicsWorld =
-        ((JBulletPhysicsEngine)physicsEngine).getDynamicsWorld();
+        dynamicsWorld = ((JBulletPhysicsEngine)physicsEngine).getDynamicsWorld();
         dispatcher = dynamicsWorld.getDispatcher();
         int manifoldCount = dispatcher.getNumManifolds();
         for (int i=0; i<manifoldCount; i++)
