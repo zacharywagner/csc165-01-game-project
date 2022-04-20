@@ -24,7 +24,7 @@ public class GhostManager
 		ObjShape s = game.getGhostShape();
 		TextureImage t = game.getGhostTexture();
 		GhostAvatar newAvatar = new GhostAvatar(id, s, t, position);
-		Matrix4f initialScale = (new Matrix4f()).scaling(0.25f);
+		Matrix4f initialScale = (new Matrix4f()).scaling(0.5f);
 		newAvatar.setLocalScale(initialScale);
 		ghostAvatars.add(newAvatar);
 	}

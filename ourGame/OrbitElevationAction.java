@@ -31,11 +31,11 @@ public class OrbitElevationAction extends AbstractInputAction {
         }
 
         float currentCameraElevation = orbitController.getCameraElevation();
-
+        
         if(currentCameraElevation + pitchAmount < 20.0f || currentCameraElevation + pitchAmount > 85.0f) {
             pitchAmount = 0.0f * time;
         }
-
+        
         orbitController.setCameraElevation(currentCameraElevation + pitchAmount);
         orbitController.updateCameraPosition();
     }

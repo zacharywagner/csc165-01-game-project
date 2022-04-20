@@ -90,8 +90,8 @@ public class OurGame extends VariableFrameRateGame {
     @Override
     public void loadShapes() {
         avatarS = new ImportedModel("playership.obj");
-        ghostS = new Sphere();
-        // ghostS = new ImportedModel("dolphinHighPoly.obj");
+        // ghostS = new Sphere();
+        ghostS = new ImportedModel("playership.obj");
     
         //Load terrain shape(s).
         terrainObjShape = new TerrainPlane(1000);
@@ -100,7 +100,8 @@ public class OurGame extends VariableFrameRateGame {
     @Override
     public void loadTextures() {
         avatartx = new TextureImage("playership.png");
-        ghosttx = new TextureImage("stripe.png");
+        // ghosttx = new TextureImage("stripe.png");
+        ghosttx = new TextureImage("playership.png");
 
         //Load terrain texture image(s).
         terrainTextureImage = new TextureImage("terrain.png");
@@ -111,7 +112,7 @@ public class OurGame extends VariableFrameRateGame {
         // build avatar
         avatar = new GameObject(GameObject.root(), avatarS, avatartx);
         avatar.setLocalTranslation((new Matrix4f()).translation(0,0,0));
-        avatar.setLocalScale((new Matrix4f()).scaling(1.0f));
+        avatar.setLocalScale((new Matrix4f()).scaling(0.5f));
 
         //Build terrain game object(s).
         terrainGameObject = new GameObject(GameObject.root(), terrainObjShape, terrainTextureImage);
@@ -163,12 +164,13 @@ public class OurGame extends VariableFrameRateGame {
         RightAction rightAction = new RightAction(this, protocolClient);
         FwdAction fwdAction = new FwdAction(this, protocolClient);
         BackAction backAction = new BackAction(this, protocolClient);
+
         // controller actions
         BackNForthAction backNForthAction = new BackNForthAction(this, protocolClient);
         LeftNRightAction leftNRightAction = new LeftNRightAction(this, protocolClient);
-        // OrbitAzimuthAction orbitAzimuthAction = new OrbitAzimuthAction(this);
+        OrbitAzimuthAction orbitAzimuthAction = new OrbitAzimuthAction(this);
         OrbitElevationAction orbitElevationAction = new OrbitElevationAction(this);
-        // OrbitZoomAction orbitZoomAction = new OrbitZoomAction(this);
+        OrbitZoomAction orbitZoomAction = new OrbitZoomAction(this);
         SendCloseConnectionPacketAction sendCloseConnectionPacketAction = new SendCloseConnectionPacketAction();
 
         for(Controller c : controllers) {
@@ -218,14 +220,14 @@ public class OurGame extends VariableFrameRateGame {
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
                 // controller orbit azimuth
-                /*
+                
                 im.associateAction(
                     c,
                     net.java.games.input.Component.Identifier.Axis.RX,
                     orbitAzimuthAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
-                */
+                
                 // controller orbit elevation
                 im.associateAction(
                     c,
@@ -234,14 +236,14 @@ public class OurGame extends VariableFrameRateGame {
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
                 // controller orbit zoom
-                /*
+                
                 im.associateAction(
                     c,
                     net.java.games.input.Component.Identifier.Axis.Z,
                     orbitZoomAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
-                */
+                
                 im.associateAction(
                     c,
                     net.java.games.input.Component.Identifier.Button._1,

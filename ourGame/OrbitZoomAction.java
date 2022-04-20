@@ -32,7 +32,7 @@ public class OrbitZoomAction extends AbstractInputAction {
 
         float currentCameraRadius = orbitController.getCameraRadius();
 
-        if(currentCameraRadius + zoomAmount < 2.0f || currentCameraRadius + zoomAmount > 20.0f) {
+        if(currentCameraRadius + zoomAmount < 2.0f || currentCameraRadius + zoomAmount > 50.0f) {
             zoomAmount = 0.0f * time;
         }
 
