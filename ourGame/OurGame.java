@@ -433,10 +433,6 @@ public class OurGame extends VariableFrameRateGame {
         Vector3f location = avatar.getWorldLocation();
         float height = terrainGameObject.getHeight(location.x, location.z);
         height += terrainGameObject.getWorldLocation().y;
-<<<<<<< Updated upstream
-        //System.out.println("height = " + height + " y = " + avatar.getWorldLocation().y);
-=======
->>>>>>> Stashed changes
         if(avatar.getWorldLocation().y < height){
             System.out.println("BOOM! The spaceship is colliding with the terrain.");
         }
