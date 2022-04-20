@@ -5,6 +5,7 @@ import tage.input.action.AbstractInputAction;
 import tage.input.InputManager;
 import tage.input.IInputManager.INPUT_ACTION_TYPE;
 import tage.networking.IGameConnection.ProtocolType;
+import tage.physics.PhysicsObject;
 import tage.shapes.*;
 
 import java.io.IOException;
@@ -24,6 +25,13 @@ import org.joml.*;
 
 import net.java.games.input.*;
 import net.java.games.input.Component.Identifier.*;
+
+import tage.physics.PhysicsEngine;
+import tage.physics.PhysicsObject;
+import tage.physics.PhysicsEngineFactory;
+import tage.physics.JBullet.*;
+import com.bulletphysics.dynamics.RigidBody;
+import com.bulletphysics.collision.dispatch.CollisionObject;
 
 public class OurGame extends VariableFrameRateGame {
     private static Engine engine;
@@ -66,6 +74,22 @@ public class OurGame extends VariableFrameRateGame {
     private ScriptEngine jsEngine;
     private File initScript;
     private long fileLastModifiedTime = 0;
+
+    //
+    // Physics
+    //
+    private PhysicsEngine physicsEngine;
+    private boolean running = true;
+    private PhysicsObject playerPhysicsObject;
+
+    //
+    // Enemies
+    //
+
+    private GameObject rammerGameObject;
+    private ImportedModel rammerImportedModel;
+    private TextureImage rammerTextureImage;
+    private PhysicsObject rammerPhysicsObject;
     
     public OurGame(String serverAddress, int serverPort) {
         super();
@@ -95,6 +119,9 @@ public class OurGame extends VariableFrameRateGame {
     
         //Load terrain shape(s).
         terrainObjShape = new TerrainPlane(1000);
+
+        //Load the enemies' models.
+        rammerImportedModel = new ImportedModel("rammer.obj");
     }
     
     @Override
@@ -105,6 +132,9 @@ public class OurGame extends VariableFrameRateGame {
 
         //Load terrain texture image(s).
         terrainTextureImage = new TextureImage("terrain.png");
+
+        //Load the enemies' texture images.
+        rammerTextureImage = new TextureImage("rammer.png");
     }
 
     @Override
@@ -119,6 +149,9 @@ public class OurGame extends VariableFrameRateGame {
         terrainGameObject.setLocalTranslation(new Matrix4f().translation(0f, 0f, 0f));
         terrainGameObject.setLocalScale(new Matrix4f().scaling(1f, 1f, 1f));
         terrainGameObject.setHeightMap(terrainTextureImage);
+
+        //Build an enemy as a test.
+        rammerGameObject = new GameObject(GameObject.root(), rammerImportedModel, rammerTextureImage);
     }
 
     @Override
@@ -252,6 +285,24 @@ public class OurGame extends VariableFrameRateGame {
                 );
             }
         }
+
+        //PHYSICS
+        String engine = "tage.physics.JBullet.JBulletPhysicsEngine";
+        float[] gravity = {0f, -5f, 0f};
+        physicsEngine = PhysicsEngineFactory.createPhysicsEngine(engine);
+        physicsEngine.initSystem();
+        physicsEngine.setGravity(gravity);
+
+        //Addin a collider to the player!
+        float vals[] = new float[16];
+        double[] transform = toDoubleArray(avatar.getLocalTranslation().get(vals));
+        playerPhysicsObject = physicsEngine.addBoxObject(physicsEngine.nextUID(), 1f, transform, new float[]{1f, 1f, 1f});
+        avatar.setPhysicsObject(playerPhysicsObject);
+
+        //Adding a collider to the test enemy.
+        transform = toDoubleArray(rammerGameObject.getLocalTranslation().get(vals));
+        rammerPhysicsObject = physicsEngine.addBoxObject(physicsEngine.nextUID(), 1f, transform, new float[]{1f, 1f, 1f});
+        rammerGameObject.setPhysicsObject(rammerPhysicsObject);
     }
 
     @Override
@@ -259,6 +310,33 @@ public class OurGame extends VariableFrameRateGame {
         // update elapsed time
         elapsedTime = System.currentTimeMillis() - prevTime;
         prevTime = System.currentTimeMillis();
+
+
+        //
+        // UPDATE PHYSICS
+        //
+
+        if(running){
+            Matrix4f mat = new Matrix4f();
+            Matrix4f mat2 = new Matrix4f().identity();
+            checkForCollisions();
+            physicsEngine.update((float)elapsedTime);
+            /*
+            for (GameObject go:engine.getSceneGraph().getGameObjects()){
+                if (go.getPhysicsObject() != null){ 
+                    mat.set(toFloatArray(go.getPhysicsObject().getTransform()));
+                    mat2.set(3,0,mat.m30());
+                    mat2.set(3,1,mat.m31());
+                    mat2.set(3,2,mat.m32());
+                    go.setLocalTranslation(mat2);
+                } 
+            }
+            */
+        }
+
+        //
+        // PHYSICS UPDATED
+        //
 
         // build HUD
         String playerHealthStr = (jsEngine.get("playerHealth")).toString();
@@ -383,5 +461,65 @@ public class OurGame extends VariableFrameRateGame {
 	    catch (NullPointerException e4){ 
             System.out.println ("Null ptr exception reading " + scriptFile + e4);
 	    } 
+    }
+
+    //
+    // PHYSICS
+    //
+
+    private void checkForCollisions()
+    { 
+        //System.out.println("Checking for collisions.");
+        com.bulletphysics.dynamics.DynamicsWorld dynamicsWorld;
+        com.bulletphysics.collision.broadphase.Dispatcher dispatcher;
+        com.bulletphysics.collision.narrowphase.PersistentManifold manifold;
+        com.bulletphysics.dynamics.RigidBody object1, object2;
+        com.bulletphysics.collision.narrowphase.ManifoldPoint contactPoint;
+        dynamicsWorld =
+        ((JBulletPhysicsEngine)physicsEngine).getDynamicsWorld();
+        dispatcher = dynamicsWorld.getDispatcher();
+        int manifoldCount = dispatcher.getNumManifolds();
+        for (int i=0; i<manifoldCount; i++)
+            { manifold = dispatcher.getManifoldByIndexInternal(i);
+            object1 =
+            (com.bulletphysics.dynamics.RigidBody)manifold.getBody0();
+            object2 =
+            (com.bulletphysics.dynamics.RigidBody)manifold.getBody1();
+            JBulletPhysicsObject obj1 =
+            JBulletPhysicsObject.getJBulletPhysicsObject(object1);
+            JBulletPhysicsObject obj2 =
+            JBulletPhysicsObject.getJBulletPhysicsObject(object2);
+            for (int j = 0; j < manifold.getNumContacts(); j++)
+            { 
+            contactPoint = manifold.getContactPoint(j);
+                if (contactPoint.getDistance() < 0.0f)
+                { 
+                    System.out.println("---- hit between " + obj1 + " and " + obj2);
+                    break;
+                } 
+            } 
+        } 
+    }
+
+    //UTILITY
+
+    private float[] toFloatArray(double[] arr)
+    { if (arr == null) return null;
+    int n = arr.length;
+    float[] ret = new float[n];
+    for (int i = 0; i < n; i++)
+    { ret[i] = (float)arr[i];
+    }
+    return ret;
+    }
+
+    private double[] toDoubleArray(float[] arr)
+    { if (arr == null) return null;
+    int n = arr.length;
+    double[] ret = new double[n];
+    for (int i = 0; i < n; i++)
+    { ret[i] = (double)arr[i];
+    }
+    return ret;
     }
 }
