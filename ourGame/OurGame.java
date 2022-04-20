@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.lang.Math;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
@@ -92,6 +91,13 @@ public class OurGame extends VariableFrameRateGame {
     private ImportedModel rammerImportedModel;
     private TextureImage rammerTextureImage;
     private PhysicsObject rammerPhysicsObject;
+
+
+    //
+    //  PhysicsObjects
+    //
+
+    private HashMap<Integer, GameObject> physicsObjects;
     
     public OurGame(String serverAddress, int serverPort) {
         super();
@@ -181,9 +187,7 @@ public class OurGame extends VariableFrameRateGame {
 
         // setup light
         Light.setGlobalAmbient(0.5f, 0.5f, 0.5f);
-        light1 = new Light();
-        light1.setLocation(new Vector3f(5.0f, 10.0f, 2.0f));
-        (engine.getSceneGraph()).addLight(light1);
+        (engine.getSceneGraph()).addLight((Light)jsEngine.get("light"));
 
         // setup camera
         Camera cam = (engine.getRenderSystem()).getViewport("MAIN").getCamera();
@@ -298,26 +302,36 @@ public class OurGame extends VariableFrameRateGame {
         }
 
         //PHYSICS
+        physicsObjects = new HashMap<Integer, GameObject>();
         String engine = "tage.physics.JBullet.JBulletPhysicsEngine";
         float[] gravity = {0f, 0f, 0f};
         physicsEngine = PhysicsEngineFactory.createPhysicsEngine(engine);
         physicsEngine.initSystem();
         physicsEngine.setGravity(gravity);
 
+        //
+        //  These are for testing purposes. Enemies will be instantiated with a script in future sprints.
+        //
+
         //Addin a collider to the player!
         float vals[] = new float[16];
+        int uid = physicsEngine.nextUID();
         double[] transform = toDoubleArray(avatar.getLocalTranslation().get(vals));
-        playerPhysicsObject = physicsEngine.addBoxObject(physicsEngine.nextUID(), 1f, transform, new float[]{1f, 1f, 1f});
+        playerPhysicsObject = physicsEngine.addBoxObject(uid, 1f, transform, new float[]{1f, 1f, 1f});
         playerPhysicsObject.setBounciness(0f);
         playerPhysicsObject.setFriction(0f);
         avatar.setPhysicsObject(playerPhysicsObject);
+        physicsObjects.put(uid, avatar);
+
 
         //Adding a collider to the test enemy.
+        uid = physicsEngine.nextUID();
         transform = toDoubleArray(rammerGameObject.getLocalTranslation().get(vals));
-        rammerPhysicsObject = physicsEngine.addBoxObject(physicsEngine.nextUID(), 1f, transform, new float[]{1f, 1f, 1f});
+        rammerPhysicsObject = physicsEngine.addBoxObject(uid, 1f, transform, new float[]{8f, 1f, 4f});
         rammerPhysicsObject.setBounciness(0f);
         rammerPhysicsObject.setFriction(0f);
         rammerGameObject.setPhysicsObject(rammerPhysicsObject);
+        physicsObjects.put(uid, rammerGameObject);
     }
 
     @Override
@@ -364,6 +378,11 @@ public class OurGame extends VariableFrameRateGame {
         //
         // UPDATE PHYSICS
         //
+
+        /*
+        The physics code NEEDS to be cleaned up when we get the time.
+        Works right now but won't work in the long run.
+        */
 
         double[] transform = toDoubleArray(avatar.getLocalTranslation().get(vals));
         avatar.getPhysicsObject().setTransform(transform);
@@ -414,7 +433,7 @@ public class OurGame extends VariableFrameRateGame {
         Vector3f location = avatar.getWorldLocation();
         float height = terrainGameObject.getHeight(location.x, location.z);
         height += terrainGameObject.getWorldLocation().y;
-        System.out.println("height = " + height + " y = " + avatar.getWorldLocation().y);
+        //System.out.println("height = " + height + " y = " + avatar.getWorldLocation().y);
         if(avatar.getWorldLocation().y < height){
             System.out.println("BOOM! The spaceship is colliding with the terrain.");
         }
@@ -544,6 +563,14 @@ public class OurGame extends VariableFrameRateGame {
                 if (contactPoint.getDistance() < 0.0f)
                 { 
                     System.out.println("---- hit between " + obj1 + " and " + obj2);
+                    GameObject go = physicsObjects.get(obj1.getUID());
+                    if(go != null){
+                        System.out.println("The game object " + go.toString() + " was involved with the collision!");
+                    }
+                    go = physicsObjects.get(obj2.getUID());
+                    if(go != null){
+                        System.out.println("The game object " + go.toString() + " was involved with the collision!");
+                    }
                     break;
                 } 
             } 
