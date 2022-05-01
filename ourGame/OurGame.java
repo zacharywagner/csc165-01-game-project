@@ -7,7 +7,9 @@ import tage.input.IInputManager.INPUT_ACTION_TYPE;
 import tage.networking.IGameConnection.ProtocolType;
 import tage.physics.PhysicsObject;
 import tage.shapes.*;
+import tage.shapes.AnimatedShape.EndType;
 
+import java.awt.event.*;
 import java.io.IOException;
 import java.lang.Math;
 import java.net.InetAddress;
@@ -40,11 +42,13 @@ public class OurGame extends VariableFrameRateGame {
     private double elapsedTime, prevTime;
 
     // GameObject declarations
-    private GameObject avatar;
+    private GameObject avatar, mechMan;
     // ObjShape declarations
     private ObjShape avatarS, ghostS;
+    // AnimatedShape declarations
+    private AnimatedShape mechManS;
     // TextureImage declarations
-    private TextureImage avatartx, ghosttx;
+    private TextureImage avatartx, ghosttx, mechMantx;
     // Light declarations
     private Light light1;
     // Skybox
@@ -122,8 +126,13 @@ public class OurGame extends VariableFrameRateGame {
     @Override
     public void loadShapes() {
         avatarS = new ImportedModel("playership.obj");
-        // ghostS = new Sphere();
         ghostS = new ImportedModel("playership.obj");
+
+        //Load mechMan shape
+        mechManS = new AnimatedShape("mechman.rkm", "mechman.rks");
+        mechManS.loadAnimation("KICK", "mech_kick.rka");
+        mechManS.loadAnimation("SUMMON", "summon.rka");
+        mechManS.loadAnimation("DEAD", "dead.rka");
     
         //Load terrain shape(s).
         terrainObjShape = new TerrainPlane(2048);
@@ -135,8 +144,8 @@ public class OurGame extends VariableFrameRateGame {
     @Override
     public void loadTextures() {
         avatartx = new TextureImage("playership.png");
-        // ghosttx = new TextureImage("stripe.png");
         ghosttx = new TextureImage("playership.png");
+        mechMantx = new TextureImage("mechman.png");
 
         //Load terrain texture image(s).
         terrainTextureImage = new TextureImage("mountains1.png");
@@ -152,6 +161,11 @@ public class OurGame extends VariableFrameRateGame {
         avatar = new GameObject(GameObject.root(), avatarS, avatartx);
         avatar.setLocalTranslation((new Matrix4f()).translation(0,0,0));
         avatar.setLocalScale((new Matrix4f()).scaling(0.5f));
+
+        // build mechman
+        mechMan = new GameObject(GameObject.root(), mechManS, mechMantx);
+        mechMan.setLocalTranslation((new Matrix4f()).translation(0,0,10));
+        mechManS.playAnimation("KICK", 0.5f, EndType.LOOP, 0);
 
         //Build terrain game object(s).
         terrainGameObject = new GameObject(GameObject.root(), terrainObjShape, terrainTextureImage);
@@ -375,6 +389,9 @@ public class OurGame extends VariableFrameRateGame {
         // update inputs
         im.update((float)elapsedTime);
 
+        // update animation
+        mechManS.updateAnimation();
+
         //
         // UPDATE PHYSICS
         //
@@ -443,6 +460,26 @@ public class OurGame extends VariableFrameRateGame {
 
         // update networking
         processNetworking((float)elapsedTime);
+    }
+
+    // SHOWCASE ANIMATIONS
+    @Override
+    public void keyPressed(KeyEvent e) {
+        switch(e.getKeyCode()) {
+            case KeyEvent.VK_1:
+                mechManS.stopAnimation();
+                mechManS.playAnimation("KICK", 0.5f, EndType.LOOP, 0);
+                break;
+            case KeyEvent.VK_2:
+                mechManS.stopAnimation();
+                mechManS.playAnimation("SUMMON", 0.5f, EndType.LOOP, 0);
+                break;
+            case KeyEvent.VK_3:
+                mechManS.stopAnimation();
+                mechManS.playAnimation("DEAD", 0.5f, EndType.PAUSE, 0);
+                break;
+        }
+            super.keyPressed(e);
     }
     
     public CameraOrbit3D getCameraController() {
