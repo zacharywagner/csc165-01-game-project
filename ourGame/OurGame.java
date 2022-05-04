@@ -1,12 +1,18 @@
 package ourGame;
 
+//https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc
+
 import tage.*;
+import tage.audio.*;
+import tage.audio.AudioManagerFactory;
+import tage.audio.AudioResource;
 import tage.input.action.AbstractInputAction;
 import tage.input.InputManager;
 import tage.input.IInputManager.INPUT_ACTION_TYPE;
 import tage.networking.IGameConnection.ProtocolType;
 import tage.physics.PhysicsObject;
 import tage.shapes.*;
+import com.jogamp.openal.ALFactory;
 
 import java.io.IOException;
 import java.lang.Math;
@@ -130,6 +136,9 @@ public class OurGame extends VariableFrameRateGame {
 
         //Load the enemies' models.
         rammerImportedModel = new ImportedModel("rammer.obj");
+
+        //PROJECTILE
+        sphere = new Sphere();
     }
     
     @Override
@@ -161,7 +170,7 @@ public class OurGame extends VariableFrameRateGame {
 
         //Build an enemy as a test.
         rammerGameObject = new GameObject(GameObject.root(), rammerImportedModel, rammerTextureImage);
-        rammerGameObject.setLocalTranslation(new Matrix4f().translation(0f, 0f, 0f));
+        rammerGameObject.setLocalTranslation(new Matrix4f().translation(0f, -100f, 0f));
 
     }
 
@@ -179,7 +188,7 @@ public class OurGame extends VariableFrameRateGame {
         Vector3f terrainLocalScale = (Vector3f)(jsEngine.get("terrainLocalScale"));
         terrainGameObject.setLocalScale(new Matrix4f().scaling(terrainLocalScale));
         Vector3f terrainLocalLocation = (Vector3f)(jsEngine.get("terrainLocalLocation"));
-        System.out.println(terrainLocalLocation.y);
+        //System.out.println(terrainLocalLocation.y);
         terrainGameObject.setLocalLocation(terrainLocalLocation);
 
         // setup window
@@ -221,6 +230,9 @@ public class OurGame extends VariableFrameRateGame {
         OrbitZoomAction orbitZoomAction = new OrbitZoomAction(this);
         SendCloseConnectionPacketAction sendCloseConnectionPacketAction = new SendCloseConnectionPacketAction();
 
+        //PROJECTILE
+        FireInputAction fireInputAction = new FireInputAction(this);
+
         for(Controller c : controllers) {
             if(c.getType() == Controller.Type.KEYBOARD) {
                 // keyboard left
@@ -250,6 +262,12 @@ public class OurGame extends VariableFrameRateGame {
                     net.java.games.input.Component.Identifier.Key.DOWN,
                     backAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
+                im.associateAction(
+                    c,
+                    net.java.games.input.Component.Identifier.Key.SPACE,
+                    fireInputAction,
+                    INPUT_ACTION_TYPE.ON_PRESS_ONLY
                 );
             }
             if(c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK) {
@@ -332,6 +350,12 @@ public class OurGame extends VariableFrameRateGame {
         rammerPhysicsObject.setFriction(0f);
         rammerGameObject.setPhysicsObject(rammerPhysicsObject);
         physicsObjects.put(uid, rammerGameObject);
+
+
+        //
+        // AUDIO
+        //
+        initializeAudio();
     }
 
     @Override
@@ -363,7 +387,7 @@ public class OurGame extends VariableFrameRateGame {
             );
 
         // update camera
-        orbitController.updateCameraPosition();
+        //orbitController.updateCameraPosition();
 
         // update scripting values
         long modTime = initScript.lastModified();
@@ -382,7 +406,7 @@ public class OurGame extends VariableFrameRateGame {
         /*
         The physics code NEEDS to be cleaned up when we get the time.
         Works right now but won't work in the long run.
-        */
+        
 
         double[] transform = toDoubleArray(avatar.getLocalTranslation().get(vals));
         avatar.getPhysicsObject().setTransform(transform);
@@ -440,10 +464,44 @@ public class OurGame extends VariableFrameRateGame {
         //
         // PHYSICS UPDATED
         //
+        */
+
+        updateProjectiles();
+
+        //Update the sound!
+        setEarParameters();
 
         // update networking
         processNetworking((float)elapsedTime);
     }
+
+    //PROJECTILES
+
+    public PhysicsEngine getPhysicsEngine(){
+        return physicsEngine;
+    }
+    public HashMap<Integer, GameObject> getPhysicsObjects(){
+        return physicsObjects;
+    }
+    private Sphere sphere;
+    public Sphere getSphere(){
+        return sphere;
+    }
+
+    //private ArrayList<Laser> lasers = new ArrayList<Laser>();
+
+    public void fire(){
+        System.out.println("fire()");
+        //GameObject gameObject = new GameObject(GameObject.root(), sphere);
+        //gameObject.setLocalTranslation(new Matrix4f().translate(avatar.getWorldLocation()));
+        laser9Sound.setLocation(avatar.getWorldLocation());
+        laser9Sound.play();
+        Vector3f localLocation = avatar.getLocalLocation();
+        getOrCreateProjectile(new Vector2f(0f, 1f), 0xfffffffe, new Vector2f(localLocation.x, localLocation.z + 1f), 48f);
+        System.out.println("play()");
+    }
+
+    //
     
     public CameraOrbit3D getCameraController() {
         return orbitController;
@@ -535,9 +593,7 @@ public class OurGame extends VariableFrameRateGame {
     // PHYSICS
     //
 
-    private void checkForCollisions()
-    { 
-        //System.out.println("Checking for collisions.");
+    private void checkForCollisions(){ 
         com.bulletphysics.dynamics.DynamicsWorld dynamicsWorld;
         com.bulletphysics.collision.broadphase.Dispatcher dispatcher;
         com.bulletphysics.collision.narrowphase.PersistentManifold manifold;
@@ -546,29 +602,23 @@ public class OurGame extends VariableFrameRateGame {
         dynamicsWorld = ((JBulletPhysicsEngine)physicsEngine).getDynamicsWorld();
         dispatcher = dynamicsWorld.getDispatcher();
         int manifoldCount = dispatcher.getNumManifolds();
-        for (int i=0; i<manifoldCount; i++)
-            { manifold = dispatcher.getManifoldByIndexInternal(i);
-            object1 =
-            (com.bulletphysics.dynamics.RigidBody)manifold.getBody0();
-            object2 =
-            (com.bulletphysics.dynamics.RigidBody)manifold.getBody1();
-            JBulletPhysicsObject obj1 =
-            JBulletPhysicsObject.getJBulletPhysicsObject(object1);
-            JBulletPhysicsObject obj2 =
-            JBulletPhysicsObject.getJBulletPhysicsObject(object2);
-            for (int j = 0; j < manifold.getNumContacts(); j++)
-            { 
+        for (int i=0; i<manifoldCount; i++){ 
+            manifold = dispatcher.getManifoldByIndexInternal(i);
+            object1 = (com.bulletphysics.dynamics.RigidBody)manifold.getBody0();
+            object2 = (com.bulletphysics.dynamics.RigidBody)manifold.getBody1();
+            JBulletPhysicsObject obj1 = JBulletPhysicsObject.getJBulletPhysicsObject(object1);
+            JBulletPhysicsObject obj2 = JBulletPhysicsObject.getJBulletPhysicsObject(object2);
+            for (int j = 0; j < manifold.getNumContacts(); j++){ 
             contactPoint = manifold.getContactPoint(j);
-                if (contactPoint.getDistance() < 0.0f)
-                { 
-                    System.out.println("---- hit between " + obj1 + " and " + obj2);
+                if (contactPoint.getDistance() < 0.0f){ 
+                    //System.out.println("---- hit between " + obj1 + " and " + obj2);
                     GameObject go = physicsObjects.get(obj1.getUID());
                     if(go != null){
-                        System.out.println("The game object " + go.toString() + " was involved with the collision!");
+                        //System.out.println("The game object " + go.toString() + " was involved with the collision!");
                     }
                     go = physicsObjects.get(obj2.getUID());
                     if(go != null){
-                        System.out.println("The game object " + go.toString() + " was involved with the collision!");
+                        //System.out.println("The game object " + go.toString() + " was involved with the collision!");
                     }
                     break;
                 } 
@@ -576,25 +626,150 @@ public class OurGame extends VariableFrameRateGame {
         } 
     }
 
-    //UTILITY
+    //================================================
+    // AUDIO
+    //================================================
 
-    private float[] toFloatArray(double[] arr)
-    { if (arr == null) return null;
-    int n = arr.length;
-    float[] ret = new float[n];
-    for (int i = 0; i < n; i++)
-    { ret[i] = (float)arr[i];
-    }
-    return ret;
+    //CC3.0 Licenses 
+    //https://opengameart.org/content/upbeat-sci-fi-intro
+    //Joe Reynolds - Professorlamp
+    //jrtheories.webs.com
+
+    //https://opengameart.org/content/boss-battle-theme
+    //CC-BY-SA 3.0
+    //Music by Cleyton Kauffman 
+    //https://soundcloud.com/cleytonkauffman
+    private IAudioManager audioManager;
+
+    private Sound backgroundMusicSound;
+
+    //Temporary Sounds
+    Sound laser9Sound;
+
+    private HashMap<String, AudioResource> audioResources = new HashMap<String, AudioResource>();
+
+    public void initializeAudio(){
+        audioManager = AudioManagerFactory.createAudioManager("tage.audio.joal.JOALAudioManager");
+        if(!audioManager.initialize()){
+            System.out.println("The audio manager did not initialize!");
+        }
+        AudioResource audioResource = getOrCreateAudioResource("backgroundMusic", AudioResourceType.AUDIO_STREAM);
+        backgroundMusicSound = createSound(audioResource, SoundType.SOUND_MUSIC, 50, true);
+        backgroundMusicSound.play();
+        audioResource = getOrCreateAudioResource("laser9", AudioResourceType.AUDIO_SAMPLE);
+        laser9Sound = createSound(audioResource, SoundType.SOUND_EFFECT, 100, false);
+        setEarParameters();
     }
 
-    private double[] toDoubleArray(float[] arr)
-    { if (arr == null) return null;
-    int n = arr.length;
-    double[] ret = new double[n];
-    for (int i = 0; i < n; i++)
-    { ret[i] = (double)arr[i];
+    private void setEarParameters(){
+        audioManager.getEar().setLocation(avatar.getWorldLocation());
+        audioManager.getEar().setOrientation(avatar.getWorldForwardVector(), new Vector3f(0.0f, 1.0f, 0.0f));
     }
-    return ret;
+
+    public AudioResource getOrCreateAudioResource(String string){
+        return getOrCreateAudioResource(string, AudioResourceType.AUDIO_SAMPLE);
     }
+
+    public AudioResource getOrCreateAudioResource(String string, AudioResourceType audioResourceType){
+        AudioResource audioResource = audioResources.get(string);
+        if(audioResource == null){
+            try{
+                audioResource = audioManager.createAudioResource("assets/sounds/" + string + ".wav", audioResourceType);
+                audioResources.put(string, audioResource);
+            }
+            catch(Exception exception){
+                throw exception;
+            }
+        }
+        return audioResource;
+    }
+
+    public Sound createSound(AudioResource audioResource, SoundType soundType, int volume, boolean looping){
+        Sound sound = new Sound(audioResource, soundType, volume, looping);
+        sound.initialize(audioManager);
+        return sound;
+    }
+    //================================================
+    // AUDIO
+    //================================================
+
+    //================================================
+    // PROJECTILES
+    //================================================
+    private LinkedList<Projectile> activeProjectiles = new LinkedList<Projectile>();
+    private LinkedList<Projectile> inactiveProjectiles = new LinkedList<Projectile>();
+
+    public Projectile getOrCreateProjectile(Vector2f direction, int layer, Vector2f position, float speed){
+        Projectile projectile = null;
+        if(inactiveProjectiles.size() > 0){
+            projectile = inactiveProjectiles.getFirst();
+            projectile.getGameObject().getRenderStates().enableRendering();
+            activeProjectiles.addLast(projectile);
+            inactiveProjectiles.removeFirst();
+        }
+        else{
+            GameObject gameObject = new GameObject(GameObject.root(), sphere);
+            //Create physics object.
+            float vals[] = new float[16];
+            int uid = physicsEngine.nextUID();
+            double[] transform = toDoubleArray(gameObject.getLocalTranslation().get(vals));
+            PhysicsObject physicsObject = physicsEngine.addSphereObject(uid, 1f, transform, 1f);
+            physicsObject.setBounciness(0f);
+            physicsObject.setFriction(0f);
+            gameObject.setPhysicsObject(physicsObject);
+            physicsObjects.put(uid, gameObject);
+            //Created the physics object!
+            projectile = new Projectile(gameObject, this);
+            activeProjectiles.addLast(projectile);
+        }
+        projectile.initialize(direction, layer, position, speed);
+        return projectile;
+    }
+
+    public void deactivateProjectile(Projectile projectile){
+        for(int i = 0; i < activeProjectiles.size(); i++){
+            if(activeProjectiles.get(i) == projectile){
+                inactiveProjectiles.addLast(activeProjectiles.remove(i));
+                projectile.getGameObject().getRenderStates().disableRendering();
+                return;
+            }
+        }
+    }
+
+    public void updateProjectiles(){
+        Projectile activeProjectiles[] = new Projectile[this.activeProjectiles.size()];
+        this.activeProjectiles.toArray(activeProjectiles);
+        for (Projectile activeProjectile : activeProjectiles) {
+            activeProjectile.update((float)elapsedTime / 1000f);
+        }
+    }
+    //================================================
+    // PROJECTILES
+    //================================================
+
+    //================================================
+    // UTILITY
+    //================================================
+    public static float[] toFloatArray(double[] arr){ 
+        if (arr == null) return null;
+        int n = arr.length;
+        float[] ret = new float[n];
+        for (int i = 0; i < n; i++){ 
+            ret[i] = (float)arr[i];
+        }
+        return ret;
+    }
+
+    public static double[] toDoubleArray(float[] arr){ 
+        if (arr == null) return null;
+        int n = arr.length;
+        double[] ret = new double[n];
+        for (int i = 0; i < n; i++){ 
+            ret[i] = (double)arr[i];
+        }
+        return ret;
+    }
+    //================================================
+    // UTILITY
+    //================================================
 }
