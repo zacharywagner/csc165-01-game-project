@@ -28,6 +28,7 @@ public class Red extends Spaceship{
             Vector3f avatarPosition = getOurGame().getAvatar().getWorldLocation();
             Vector3f position = getGameObject().getWorldLocation();
             Vector2f direction = new Vector2f(avatarPosition.x - position.x, avatarPosition.z - position.z);
+            if(direction.x == 0f && direction.y == 0f) return;
             System.out.println("dir " + direction.length());
             direction.normalize();
             direction.x *= getOurGame().getDeltaTime();
