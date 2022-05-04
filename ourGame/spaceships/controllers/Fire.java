@@ -7,12 +7,15 @@ import tage.*;
 import tage.ai.behaviortrees.BTCondition;
 
 public class Fire extends BTCondition {
-    public Fire(boolean toNegate){
+    private RedController redController;
+    public Fire(RedController redController, boolean toNegate){
         super(toNegate);
+        this.redController = redController;
     }
 
     protected boolean check(){
         System.out.println("Fire!");
+        redController.getRed().fire();
         return true;
     }
 }

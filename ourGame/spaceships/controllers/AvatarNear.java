@@ -20,7 +20,7 @@ public class AvatarNear extends BTCondition {
         GameObject avatar = red.getOurGame().getAvatar();
         Vector3f worldLocation = red.getGameObject().getWorldLocation();
         float distance = avatar.getWorldLocation().z - worldLocation.z;
-        System.out.println(distance);
+        //System.out.println(distance);
         distance = Math.abs(distance);
         if(distance < 20f) return true;
         return false;

@@ -494,6 +494,10 @@ public class OurGame extends VariableFrameRateGame {
         //
         */
 
+        for(int i = 0; i < reds.size(); i++){
+            reds.get(i).update();
+        }
+
         updateProjectiles();
 
         //Update the sound!
@@ -830,5 +834,9 @@ public ArrayList<Red> getReds(){
 //
 //
 //
+
+    public float getDeltaTime(){
+        return (float)elapsedTime / 1000f;
+    }
 }
 

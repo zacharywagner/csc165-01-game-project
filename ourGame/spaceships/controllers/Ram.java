@@ -7,12 +7,15 @@ import tage.*;
 import tage.ai.behaviortrees.BTCondition;
 
 public class Ram extends BTCondition {
-    public Ram(boolean toNegate){
+    private RedController redController;
+    public Ram(RedController redController, boolean toNegate){
         super(toNegate);
+        this.redController = redController;
     }
 
     protected boolean check(){
         System.out.println("Ram!");
+        redController.getRed().ram();
         return true;
     }
 }

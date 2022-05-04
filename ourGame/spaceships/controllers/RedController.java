@@ -34,8 +34,12 @@ public class RedController {
         behaviorTree.insertAtRoot(new BTSequence(10));
         behaviorTree.insertAtRoot(new BTSequence(20));
         behaviorTree.insert(10, new AvatarNear(red, this, true));
-        behaviorTree.insert(10, new Fire(false));
+        behaviorTree.insert(10, new Fire(this, false));
         behaviorTree.insert(20, new AvatarNear(red, this, false));
-        behaviorTree.insert(20, new Ram(false));
+        behaviorTree.insert(20, new Ram(this, false));
+    }
+
+    public Red getRed(){
+        return red;
     }
 }
