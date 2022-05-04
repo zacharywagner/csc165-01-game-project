@@ -40,6 +40,9 @@ import tage.physics.JBullet.*;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.collision.dispatch.CollisionObject;
 
+import ourGame.spaceships.*;
+import ourGame.spaceships.controllers.*;
+
 public class OurGame extends VariableFrameRateGame {
     private static Engine engine;
     private InputManager im;
@@ -101,6 +104,7 @@ public class OurGame extends VariableFrameRateGame {
     private ImportedModel rammerImportedModel;
     private TextureImage rammerTextureImage;
     private PhysicsObject rammerPhysicsObject;
+    private Red red;
 
 
     //
@@ -184,7 +188,7 @@ public class OurGame extends VariableFrameRateGame {
 
         //Build an enemy as a test.
         rammerGameObject = new GameObject(GameObject.root(), rammerImportedModel, rammerTextureImage);
-        rammerGameObject.setLocalTranslation(new Matrix4f().translation(0f, -100f, 0f));
+        rammerGameObject.setLocalTranslation(new Matrix4f().translation(0f, 0f, 0f));
 
     }
 
@@ -366,6 +370,10 @@ public class OurGame extends VariableFrameRateGame {
         physicsObjects.put(uid, rammerGameObject);
 
 
+        this.red = new Red(rammerGameObject, 0, this);
+        reds.add(this.red);
+        System.out.println(rammerGameObject.getWorldLocation());
+
         //
         // AUDIO
         //
@@ -401,7 +409,7 @@ public class OurGame extends VariableFrameRateGame {
             );
 
         // update camera
-        //orbitController.updateCameraPosition();
+        orbitController.updateCameraPosition();
 
         // update scripting values
         long modTime = initScript.lastModified();
@@ -412,6 +420,9 @@ public class OurGame extends VariableFrameRateGame {
 
         // update inputs
         im.update((float)elapsedTime);
+
+        //update rammer
+        this.red.getRedController().update((float)elapsedTime / 1000f);
 
         // update animation
         mechManS.updateAnimation();
@@ -508,14 +519,12 @@ public class OurGame extends VariableFrameRateGame {
     //private ArrayList<Laser> lasers = new ArrayList<Laser>();
 
     public void fire(){
-        System.out.println("fire()");
         //GameObject gameObject = new GameObject(GameObject.root(), sphere);
         //gameObject.setLocalTranslation(new Matrix4f().translate(avatar.getWorldLocation()));
         laser9Sound.setLocation(avatar.getWorldLocation());
         laser9Sound.play();
         Vector3f localLocation = avatar.getLocalLocation();
         getOrCreateProjectile(new Vector2f(0f, 1f), 0xfffffffe, new Vector2f(localLocation.x, localLocation.z + 1f), 48f);
-        System.out.println("play()");
     }
 
     //
@@ -808,4 +817,18 @@ public class OurGame extends VariableFrameRateGame {
     //================================================
     // UTILITY
     //================================================
+
+    //
+//
+//
+private ArrayList<Red> reds = new ArrayList<Red>();
+
+public ArrayList<Red> getReds(){
+    return reds;
 }
+
+//
+//
+//
+}
+
