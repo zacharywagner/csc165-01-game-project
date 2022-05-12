@@ -6,6 +6,7 @@ import tage.physics.*;
 public class Spaceship extends GameObject{
     private OurGame ourGame;
     private int uid;
+    private boolean isFriend;
 
     public int getUid(){
         return uid;
@@ -15,7 +16,11 @@ public class Spaceship extends GameObject{
         return ourGame;
     }
 
-    public Spaceship(GameObject parent, ObjShape objShape, OurGame ourGame, float[] size, TextureImage textureImage){
+    public boolean getIsFriend(){
+        return isFriend;
+    }
+
+    public Spaceship(GameObject parent, ObjShape objShape, OurGame ourGame, float[] size, TextureImage textureImage, boolean isFriend){
         super(parent, objShape, textureImage);
         this.ourGame = ourGame;
         PhysicsEngine physicsEngine = ourGame.getPhysicsEngine();
@@ -26,5 +31,7 @@ public class Spaceship extends GameObject{
         physicsObject.setBounciness(0f);
         physicsObject.setFriction(0f);
         setPhysicsObject(physicsObject);
+        ourGame.registerSpaceship(this);
+        this.isFriend = isFriend;
     }
 }

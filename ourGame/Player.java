@@ -7,12 +7,12 @@ import tage.*;
 
 public class Player extends Spaceship {
 
-    private OurGame ourGame;
     private float speed;
 
     public Player(OurGame ourGame){
-        super(GameObject.root(), ourGame.getPlayerModel(), ourGame, new float[]{1f, 1f, 1f}, ourGame.getPlayerTexture());
+        super(GameObject.root(), ourGame.getPlayerModel(), ourGame, new float[]{1f, 1f, 1f}, ourGame.getPlayerTexture(), true);
         setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(180d), 0f, 1f, 0f));
+        System.out.println(getPhysicsObject().getUID());
     }
 
     public float getSpeed(){
@@ -24,7 +24,7 @@ public class Player extends Spaceship {
     }
 
     public boolean isAvatar(){
-        return this.equals(ourGame.getAvatar());
+        return this.equals(getOurGame().getAvatar());
     }
 
     public void movePlayerInBounds(){

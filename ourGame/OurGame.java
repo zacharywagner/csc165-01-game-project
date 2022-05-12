@@ -5,6 +5,7 @@ import java.util.*;
 import javax.script.*;
 import net.java.games.input.*;
 import org.joml.Vector3f;
+import org.joml.Matrix4f;
 import ourGame.inputActions.*;
 import tage.*;
 import tage.input.*;
@@ -65,6 +66,16 @@ public class OurGame extends VariableFrameRateGame{
     private ImportedModel enemyModel;
     private TextureImage enemyTexture;
     private HashMap<Integer, Enemy> enemies = new HashMap<Integer, Enemy>();
+    private HashMap<Integer, Spaceship> spaceships = new HashMap<Integer, Spaceship>();
+    private HashMap<Integer, Projectile> projectiles = new HashMap<Integer, Projectile>();
+
+    public void registerSpaceship(Spaceship spaceship){
+        spaceships.put(spaceship.getPhysicsObject().getUID(), spaceship);
+    }
+
+    public void registerProjectile(Projectile projectile){
+        projectiles.put(projectile.getPhysicsObject().getUID(), projectile);
+    }
 
     public Player getAvatar(){
         return avatar;
@@ -126,6 +137,7 @@ public class OurGame extends VariableFrameRateGame{
 
     @Override
     public void buildObjects() {
+        initializePhysics();
         avatar = new Player(this);
     }
 
@@ -140,19 +152,109 @@ public class OurGame extends VariableFrameRateGame{
         initializeLights();
         initializeInputs();
         initializeAudio();
-        instantiateEnemy(new Vector3f());
+        instantiateEnemy(new Vector3f(0f, 0f, 0f));
     }
 
     @Override
     public void update() {
         previousTime = currentTime;
         currentTime = System.currentTimeMillis();
+        setEarParameters();
         inputManager.update((float)getDeltaTime());
         //System.out.println(avatar.getWorldLocation());
         avatar.movePlayerInBounds();
-        setEarParameters();
+        enemies.forEach((key, value) -> {
+            value.updateEnemy();
+        });
         updateProjectiles();
+        for (GameObject go:engine.getSceneGraph().getGameObjects()){
+            if (go.getPhysicsObject() != null){ 
+                go.getPhysicsObject().setLinearVelocity(new float[]{0f, 1f, 0f});
+                go.getPhysicsObject().setAngularVelocity(new float[]{0f, 1f, 0f});
+                float values[] = new float[16];
+                double[] transform = toDoubleArray(go.getLocalTranslation().get(values));
+                go.getPhysicsObject().setTransform(transform);
+            } 
+        }
+        checkForCollisions();
+        physicsEngine.update((float)(currentTime - previousTime));
+        
     }
+
+    //
+    //PHYSICS
+    //
+
+    private void checkForCollisions(){ 
+        com.bulletphysics.dynamics.DynamicsWorld dynamicsWorld;
+        com.bulletphysics.collision.broadphase.Dispatcher dispatcher;
+        com.bulletphysics.collision.narrowphase.PersistentManifold manifold;
+        com.bulletphysics.dynamics.RigidBody object1, object2;
+        com.bulletphysics.collision.narrowphase.ManifoldPoint contactPoint;
+        dynamicsWorld = ((JBulletPhysicsEngine)physicsEngine).getDynamicsWorld();
+        dispatcher = dynamicsWorld.getDispatcher();
+        int manifoldCount = dispatcher.getNumManifolds();
+        for (int i=0; i<manifoldCount; i++){ 
+            manifold = dispatcher.getManifoldByIndexInternal(i);
+            object1 = (com.bulletphysics.dynamics.RigidBody)manifold.getBody0();
+            object2 = (com.bulletphysics.dynamics.RigidBody)manifold.getBody1();
+            JBulletPhysicsObject obj1 = JBulletPhysicsObject.getJBulletPhysicsObject(object1);
+            JBulletPhysicsObject obj2 = JBulletPhysicsObject.getJBulletPhysicsObject(object2);
+            for (int j = 0; j < manifold.getNumContacts(); j++){ 
+                contactPoint = manifold.getContactPoint(j);
+                if (contactPoint.getDistance() < 0.0f){ 
+                    int uid1 = obj1.getUID();
+                    int uid2 = obj2.getUID();
+                    resolveCollision(uid1, uid2);
+                    break;
+                } 
+            } 
+        } 
+    }
+
+    private void resolveCollision(int uid1, int uid2){
+
+        Spaceship spaceship1 = spaceships.get(uid1), spaceship2 = spaceships.get(uid2);
+        Projectile projectile1 = projectiles.get(uid1), projectile2 = projectiles.get(uid2);
+        if(spaceship1 != null){
+            if(spaceship2 != null){
+                System.out.println("Two spacesgips collided!");
+            }
+            else if(projectile1 != null && activeProjectiles.contains(projectile1)){
+                System.out.println("A spaceship was hit by a projectile!");
+                projectile1.setTimer(8.1f);
+            }
+            else if(projectile2 != null && activeProjectiles.contains(projectile2)){
+                System.out.println("A spaceship was hit by a projectile!");
+                projectile2.setTimer(8.1f);
+            }
+        }
+        else if(spaceship2 != null){
+            if(projectile1 != null && activeProjectiles.contains(projectile1)){
+                System.out.println("A spaceship was hit by a projectile!");
+                projectile1.setTimer(8.1f);
+            }
+            else if(projectile2 != null && activeProjectiles.contains(projectile2)){
+                System.out.println("A spaceship was hit by a projectile!");
+                projectile2.setTimer(8.1f);
+            }
+        }
+        //System.out.println("At " + currentTime + " a collision between " + uid1 + " and " + uid2 + " occured.");
+        /*
+        for(int i  = 0; i < 16; i++){
+            System.out.print(avatar.getPhysicsObject().getTransform()[i] + ", ");
+        }
+        System.out.println();
+        for(int i  = 0; i < 16; i++){
+            System.out.print(enemies.get(1).getPhysicsObject().getTransform()[i] + ", ");
+        }
+        System.out.println();
+        */
+    }
+
+    //
+    //PHYSICS
+    //
 
     private void initializeCameras(){
         Camera camera = engine.getRenderSystem().getViewport("MAIN").getCamera();
@@ -267,7 +369,7 @@ public class OurGame extends VariableFrameRateGame{
         for(int i = 0; i < activeProjectiles.size(); i++){
             if(activeProjectiles.get(i) == projectile){
                 inactiveProjectiles.addLast(activeProjectiles.remove(i));
-                projectile.getRenderStates().disableRendering();
+                projectile.deactivate();
                 return;
             }
         }

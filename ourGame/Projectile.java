@@ -20,6 +20,10 @@ public class Projectile extends GameObject{
         return isPlayers;
     }
 
+    public void setTimer(float timer){
+        this.timer = timer;
+    }
+
     public Projectile(OurGame ourGame){
         super(GameObject.root(), ourGame.getRedSphere());
         this.ourGame = ourGame;
@@ -32,7 +36,9 @@ public class Projectile extends GameObject{
         physicsObject.setBounciness(0f);
         physicsObject.setFriction(0f);
         setPhysicsObject(physicsObject);
+        ourGame.registerProjectile(this);
         sound = ourGame.createSound(ourGame.getAudioResource("laser9"), SoundType.SOUND_EFFECT, 100, false);
+        sound.setRollOff(0.1f);
     }
 
     public void initialize(Vector3f direction, boolean isPlayers, Vector3f location, float speed){
@@ -46,11 +52,16 @@ public class Projectile extends GameObject{
         timer = 0f;
         sound.setLocation(location);
         sound.play();
+        getRenderStates().enableRendering();
+        float values[] = new float[16];
+        double[] transform = OurGame.toDoubleArray(getLocalTranslation().get(values));
+        getPhysicsObject().setTransform(transform);
     }
 
     public void updateProjectile(){
         timer += ourGame.getDeltaTime();
         if(timer > 8f){
+            System.out.println(timer);
             ourGame.deactivateProjectile(this);
             return;
         }
@@ -58,5 +69,16 @@ public class Projectile extends GameObject{
         deltaPosition.mul(speed).mul((float)ourGame.getDeltaTime());
         Vector3f localLocation = getLocalLocation();
         setLocalLocation(new Vector3f(localLocation.x + deltaPosition.x, localLocation.y + deltaPosition.y, localLocation.z + deltaPosition.z));
+    }
+
+    public void deactivate(){
+        Random random = new Random();
+        float f = random.nextFloat();
+        f *= 1000f;
+        setLocalLocation(new Vector3f(1000f + f, 1000f + f, 1000f + f));
+        float values[] = new float[16];
+        double[] transform = OurGame.toDoubleArray(getLocalTranslation().get(values));
+        getPhysicsObject().setTransform(transform);
+        getRenderStates().disableRendering();
     }
 }
