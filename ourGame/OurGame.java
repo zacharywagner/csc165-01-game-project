@@ -30,10 +30,18 @@ public class OurGame extends VariableFrameRateGame{
     }
 
     public static void main(String args[]){
-        OurGame ourGame = new OurGame(args[0], Integer.parseInt(args[1]));
-        engine = new Engine(ourGame);
-        ourGame.initializeSystem();
-        ourGame.game_loop();
+        if(args.length > 0){
+            OurGame ourGame = new OurGame(args[0], Integer.parseInt(args[1]));
+            engine = new Engine(ourGame);
+            ourGame.initializeSystem();
+            ourGame.game_loop();
+        }
+        else{
+            OurGame ourGame = new OurGame();
+            engine = new Engine(ourGame);
+            ourGame.initializeSystem();
+            ourGame.game_loop();
+        }
     }
 
     public static float[] toFloatArray(double[] arr){ 
@@ -66,6 +74,7 @@ public class OurGame extends VariableFrameRateGame{
     private TextureImage ghostTexture;
     private boolean isConnected = false;
     private boolean isHost = false;
+    private boolean isSinglePlayer = false;
 
     private LinkedList<Projectile> activeProjectiles = new LinkedList<Projectile>();
     private LinkedList<Projectile> inactiveProjectiles = new LinkedList<Projectile>();
@@ -95,6 +104,10 @@ public class OurGame extends VariableFrameRateGame{
 
     public void registerProjectile(Projectile projectile){
         projectiles.put(projectile.getPhysicsObject().getUID(), projectile);
+    }
+
+    public void registerEnemy(Enemy enemy){
+        enemies.put(enemy.getPhysicsObject().getUID(), enemy);
     }
 
     public Player getAvatar(){
@@ -167,6 +180,15 @@ public class OurGame extends VariableFrameRateGame{
         return bossTexture;
     }
 
+    public boolean getIsSinglePlayer(){
+        return isSinglePlayer;
+    }
+
+    public OurGame(){
+        super();
+        isSinglePlayer = true;
+    }
+
     public OurGame(String serverAddress, int serverPort){
         super();
         this.serverAddress = serverAddress;
@@ -221,7 +243,9 @@ public class OurGame extends VariableFrameRateGame{
         avatar.setSpeed((float)(double)javaScriptEngine.get("playerSpeed"));
         initializeCameras();
         initializeLights();
-        initializeNetworking();
+        if(!isSinglePlayer){
+            initializeNetworking();
+        }
         initializeInputs();
         initializeAudio();
         instantiateEnemy(new Vector3f(0f, 0f, 0f));
@@ -252,7 +276,9 @@ public class OurGame extends VariableFrameRateGame{
         }
         checkForCollisions();
         physicsEngine.update((float)(currentTime - previousTime));
-        processNetworking((float)elapsedTime);
+        if(!isSinglePlayer){
+            processNetworking((float)elapsedTime);
+        }
     }
 
     //
