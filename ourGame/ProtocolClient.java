@@ -103,6 +103,26 @@ public class ProtocolClient extends GameConnectionClient {
 				
 				ghostManager.updateGhostAvatar(ghostID, ghostPosition);
 	        }
+
+			// Handle SENDSHOT message
+			// Format (sendshot,remoteId,dirx,diry,dirz,isPlayers,locx,locy,locz,speed)
+			if (messageTokens[0].compareTo("sendshot") == 0) {
+				UUID ghostID = UUID.fromString(messageTokens[1]);
+				Projectile newProjectile = new Projectile(game);
+				Vector3f direction = new Vector3f(
+					Float.parseFloat(messageTokens[2]),
+					Float.parseFloat(messageTokens[3]),
+					Float.parseFloat(messageTokens[4])
+				);
+				boolean isPlayers = Boolean.parseBoolean(messageTokens[5]);
+				Vector3f location = new Vector3f(
+					Float.parseFloat(messageTokens[6]),
+					Float.parseFloat(messageTokens[7]),
+					Float.parseFloat(messageTokens[8])
+				);
+				float speed = Float.parseFloat(messageTokens[9]);
+				game.getOrCreateProjectile(direction, isPlayers, location, speed);
+			}
         }
     }
 	
@@ -176,4 +196,23 @@ public class ProtocolClient extends GameConnectionClient {
 		}
         catch (IOException e) {	e.printStackTrace();}
     }
+
+	// Format (sendshot,clientId,dirx,diry,dirz,isPlayers,locx,locy,locz,speed)
+	public void sendSendShotMessage(Vector3f direction, boolean isPlayers, Vector3f location, float speed) {
+		String message = new String("sendshot," + id.toString());
+		try{
+			message += "," + direction.x();
+			message += "," + direction.y();
+			message += "," + direction.z();
+			message += "," + isPlayers;
+			message += "," + location.x();
+			message += "," + location.y();
+			message += "," + location.z();
+			message += "," + speed;
+
+			sendPacket(message);
+		}
+		catch (IOException e) {	e.printStackTrace();}
+		
+	}
 }

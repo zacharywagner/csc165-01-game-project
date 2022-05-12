@@ -360,7 +360,7 @@ public class OurGame extends VariableFrameRateGame{
     private void initializeInputs(){
         inputManager = engine.getInputManager();
         MoveAvatarAction moveAvatarAction = new MoveAvatarAction(this, protocolClient);
-        AvatarFireAction avatarFireAction = new AvatarFireAction(this);
+        AvatarFireAction avatarFireAction = new AvatarFireAction(this, protocolClient);
         ArrayList<Controller> controllers = inputManager.getControllers();
         for (Controller controller : controllers) {
             if(controller.getType().equals(Controller.Type.KEYBOARD)){

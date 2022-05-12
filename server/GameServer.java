@@ -75,6 +75,16 @@ public class GameServer extends GameConnectionServer<UUID> {
 				String[] pos = {messageTokens[2], messageTokens[3], messageTokens[4]};
 				sendMoveMessages(clientID, pos);
 	        }
+
+			// SENDSHOT --- Case where server receives a SENDSHOT message
+			// Format (sendshot,clientIc,dirx,diry,dirz,isPlayers,locx,locy,locz,speed)
+			if(messageTokens[0].compareTo("sendshot") == 0) {
+				try {
+					UUID clientID = UUID.fromString(messageTokens[1]);
+					forwardPacketToAll(message, clientID);	
+				}
+				catch (IOException e) { e.printStackTrace();}
+			}
         }
     }
 

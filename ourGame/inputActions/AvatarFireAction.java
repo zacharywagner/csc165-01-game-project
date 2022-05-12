@@ -9,10 +9,12 @@ import tage.input.action.AbstractInputAction;
 public class AvatarFireAction extends AbstractInputAction{
 
     private OurGame ourGame;
+    private ProtocolClient protocolClient;
     private long lastActionTime;
 
-    public AvatarFireAction(OurGame ourGame){
+    public AvatarFireAction(OurGame ourGame, ProtocolClient protocolClient){
         this.ourGame = ourGame;
+        this.protocolClient = protocolClient;
         lastActionTime = 0;
     }
 
@@ -25,6 +27,10 @@ public class AvatarFireAction extends AbstractInputAction{
         }
         Vector3f position = ourGame.getAvatar().getWorldLocation();
         position.z -= 1f;
-        ourGame.getOrCreateProjectile(new Vector3f(0f, 0f, -1f), true, position, 64f);
+        Vector3f direction = new Vector3f(0f, 0f, -1f);
+        boolean isPlayers = true;
+        float speed = 64f;
+        ourGame.getOrCreateProjectile(direction, isPlayers, position, speed);
+        protocolClient.sendSendShotMessage(direction, isPlayers, position, speed);
     }
 }
