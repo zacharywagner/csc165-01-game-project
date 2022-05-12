@@ -58,6 +58,15 @@ public class GameServer extends GameConnectionServer<UUID> {
 				String[] pos = {messageTokens[3], messageTokens[4], messageTokens[5]};
 				sendDetailsForMessage(clientID, remoteID, pos);
 			}
+
+			// UPDATE-NPC --- Case where client needs NPC status
+			// Recevied Message Format: (updatenpc,clientId,npcIndex,x,y,z)
+			if(messageTokens[0].compareTo("updatenpc") == 0) {
+				UUID clientID = UUID.fromString(messageTokens[1]);
+				String npcIndex = messageTokens[2];
+				String[] pos = {messageTokens[3], messageTokens[4], messageTokens[5]};
+				sendDetailsForNpcMessage(clientID, npcIndex, pos);
+			}
 			
 			// MOVE --- Case where server receives a move message
 			// Received Message Format: (move,localId,x,y,z)
@@ -146,6 +155,20 @@ public class GameServer extends GameConnectionServer<UUID> {
 		} 
 		catch (IOException e) {	e.printStackTrace();}
     }
+
+	// Shares NPC info with other clients to update their NPC tables.
+	// Message Format: (npcstatus,npcIndex,x,y,z)
+	public void sendDetailsForNpcMessage(UUID clientID, String npcIndex, String[] position) {
+		try {
+			String message = new String("npcstatus");
+			message += "," + npcIndex;
+			message += "," + position[0];
+			message += "," + position[1];
+			message += "," + position[2];
+			forwardPacketToAll(message, clientID);
+		}
+		catch (IOException e) {e.printStackTrace();}
+	}
 	
 	// Informs a client that a remote client�s avatar has changed position. x, y, and z represent 
 	// the new position of the remote avatar. This message is meant to be forwarded to all clients

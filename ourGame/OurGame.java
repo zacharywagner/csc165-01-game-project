@@ -503,6 +503,11 @@ public class OurGame extends VariableFrameRateGame {
         //Update the sound!
         setEarParameters();
 
+        // update npc networking
+        for(Red thisRed : reds) {
+            protocolClient.sendUpdateNpcMessage(reds.indexOf(thisRed), thisRed.getGameObject().getLocalLocation());
+        }
+
         // update networking
         processNetworking((float)elapsedTime);
     }

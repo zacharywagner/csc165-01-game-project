@@ -1,5 +1,7 @@
 package ourGame;
 
+import ourGame.spaceships.controllers.*;
+
 import java.awt.Color;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -14,6 +16,7 @@ import tage.networking.client.GameConnectionClient;
 public class ProtocolClient extends GameConnectionClient {
 	private OurGame game;
 	private GhostManager ghostManager;
+	private RedController redController;
 	private UUID id;
 	
 	public ProtocolClient(InetAddress remoteAddr, int remotePort, ProtocolType protocolType, OurGame game) throws IOException {
@@ -103,6 +106,18 @@ public class ProtocolClient extends GameConnectionClient {
 				
 				ghostManager.updateGhostAvatar(ghostID, ghostPosition);
 	        }
+
+			// Handle npcstatus message
+			// Format: (npcstatus,npcIndex,x,y,z)
+			if (messageTokens[0].compareTo("npcstatus") == 0) {
+				Vector3f npcPosition = new Vector3f(
+					Float.parseFloat(messageTokens[2]),
+					Float.parseFloat(messageTokens[3]),
+					Float.parseFloat(messageTokens[4])
+				);
+
+				game.getReds().get(Integer.parseInt(messageTokens[1])).getGameObject().setLocalLocation(npcPosition);
+			}
         }
     }
 	
@@ -161,6 +176,22 @@ public class ProtocolClient extends GameConnectionClient {
 		}
         catch (IOException e) {	e.printStackTrace();}
     }
+
+	// Sends NPC location to server to be broadcast to everybody.
+	// Message Format: (updatenpc,clientId,npcIndex,x,y,z)
+
+	public void sendUpdateNpcMessage(int npcIndex, Vector3f position) {
+		try {
+			String message = new String("updatenpc," + id.toString());
+			message += "," + Integer.toString(npcIndex);
+			message += "," + String.valueOf(position.x());
+			message += "," + String.valueOf(position.y());
+			message += "," + String.valueOf(position.z());
+
+			sendPacket(message);
+		}
+		catch (IOException e) {e.printStackTrace();}
+	}
 	
 	// Informs the server that the local avatar has changed position.  
 	// Message Format: (move,localId,x,y,z) where x, y, and z represent the position.
