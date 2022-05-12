@@ -3,6 +3,9 @@ package ourGame;
 import java.io.*;
 import java.util.*;
 import javax.script.*;
+
+import com.jogamp.opengl.util.texture.Texture;
+
 import net.java.games.input.*;
 import org.joml.Vector3f;
 import org.joml.Matrix4f;
@@ -52,6 +55,12 @@ public class OurGame extends VariableFrameRateGame{
         return ret;
     }
 
+    // networking stuff
+    private GhostManager gm;
+    private ImportedModel ghostModel;
+    private TextureImage ghostTexture;
+    private boolean isConnected = false;
+
     private LinkedList<Projectile> activeProjectiles = new LinkedList<Projectile>();
     private LinkedList<Projectile> inactiveProjectiles = new LinkedList<Projectile>();
     private Player avatar;
@@ -86,6 +95,22 @@ public class OurGame extends VariableFrameRateGame{
         return avatar;
     }
 
+    public GhostManager getGhostManager() {
+        return gm;
+    }
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    public void setIsConnected(boolean value) {
+        isConnected = value;
+    }
+
+    public Vector3f getPlayerPosition() {
+        return avatar.getLocalLocation();
+    }
+
     public double getDeltaTime(){
         long deltaTime = currentTime - previousTime;
         return (double)deltaTime / 1000d;
@@ -100,8 +125,16 @@ public class OurGame extends VariableFrameRateGame{
         return playerModel;
     }
 
+    public ImportedModel getGhostModel() {
+        return ghostModel;
+    }
+
     public TextureImage getPlayerTexture(){
         return playerTexture;
+    }
+
+    public TextureImage getGhostTexture() {
+        return ghostTexture;
     }
 
     public Sphere getGreenSphere(){
@@ -142,6 +175,7 @@ public class OurGame extends VariableFrameRateGame{
     @Override
     public void loadShapes() {
         playerModel = new ImportedModel("player.obj");
+        ghostModel = new ImportedModel("player.obj");
         enemyModel = new ImportedModel("enemy.obj");
         greenSphere = new Sphere();
         greenSphere.setMatAmb(new float[]{0f, 1f, 0f, 1f});
@@ -156,6 +190,7 @@ public class OurGame extends VariableFrameRateGame{
     @Override
     public void loadTextures() {
         playerTexture = new TextureImage("player.png");
+        ghostTexture = new TextureImage("player.png");
         enemyTexture = new TextureImage("enemy.png");
         bossTexture = new TextureImage("mechman.png");
 
