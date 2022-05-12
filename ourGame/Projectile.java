@@ -51,11 +51,18 @@ public class Projectile extends GameObject{
         this.speed = speed;
         timer = 0f;
         sound.setLocation(location);
+        if(!isPlayers){
+            sound.setVolume(100);
+        }
+        else{
+            sound.setVolume(50);
+        }
         sound.play();
         getRenderStates().enableRendering();
         float values[] = new float[16];
         double[] transform = OurGame.toDoubleArray(getLocalTranslation().get(values));
         getPhysicsObject().setTransform(transform);
+        
     }
 
     public void updateProjectile(){

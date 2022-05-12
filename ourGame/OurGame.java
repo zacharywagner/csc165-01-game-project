@@ -68,6 +68,11 @@ public class OurGame extends VariableFrameRateGame{
     private HashMap<Integer, Enemy> enemies = new HashMap<Integer, Enemy>();
     private HashMap<Integer, Spaceship> spaceships = new HashMap<Integer, Spaceship>();
     private HashMap<Integer, Projectile> projectiles = new HashMap<Integer, Projectile>();
+    private int skybox;
+    private AnimatedShape bossAnimatedShape;
+    private TextureImage bossTexture;
+    private Boss boss;
+
 
     public void registerSpaceship(Spaceship spaceship){
         spaceships.put(spaceship.getPhysicsObject().getUID(), spaceship);
@@ -115,8 +120,23 @@ public class OurGame extends VariableFrameRateGame{
         return enemyTexture;
     }
 
+    public AnimatedShape getBossAnimatedShape(){
+        return bossAnimatedShape;
+    }
+
+    public TextureImage getBossTexture(){
+        return bossTexture;
+    }
+
     public OurGame(){
         super();
+    }
+
+    @Override
+    public void loadSkyBoxes() {
+        skybox = (engine.getSceneGraph()).loadCubeMap("redSpace");
+        (engine.getSceneGraph()).setActiveSkyBoxTexture(skybox);
+        (engine.getSceneGraph()).setSkyBoxEnabled(true);
     }
 
     @Override
@@ -126,19 +146,26 @@ public class OurGame extends VariableFrameRateGame{
         greenSphere = new Sphere();
         greenSphere.setMatAmb(new float[]{0f, 1f, 0f, 1f});
         redSphere = new Sphere();
-        redSphere.setMatAmb(new float[]{1f, 0f, 0f, 1f});
+        redSphere.setMatAmb(new float[]{1f, 1f, 0f, 1f});
+        bossAnimatedShape = new AnimatedShape("mechman.rkm", "mechman.rks");
+        bossAnimatedShape.loadAnimation("KICK", "mech_kick.rka");
+        bossAnimatedShape.loadAnimation("SUMMON", "summon.rka");
+        bossAnimatedShape.loadAnimation("DEAD", "dead.rka");
     }
 
     @Override
     public void loadTextures() {
         playerTexture = new TextureImage("player.png");
         enemyTexture = new TextureImage("enemy.png");
+        bossTexture = new TextureImage("mechman.png");
+
     }
 
     @Override
     public void buildObjects() {
         initializePhysics();
         avatar = new Player(this);
+        boss = new Boss(this);
     }
 
     @Override
@@ -166,6 +193,7 @@ public class OurGame extends VariableFrameRateGame{
         enemies.forEach((key, value) -> {
             value.updateEnemy();
         });
+        bossAnimatedShape.updateAnimation();
         updateProjectiles();
         for (GameObject go:engine.getSceneGraph().getGameObjects()){
             if (go.getPhysicsObject() != null){ 
@@ -218,25 +246,39 @@ public class OurGame extends VariableFrameRateGame{
         Projectile projectile1 = projectiles.get(uid1), projectile2 = projectiles.get(uid2);
         if(spaceship1 != null){
             if(spaceship2 != null){
-                System.out.println("Two spacesgips collided!");
+                if(spaceship1.getIsFriend() != spaceship2.getIsFriend()){
+                    System.out.println("Two spacesgips collided!");
+                }
             }
             else if(projectile1 != null && activeProjectiles.contains(projectile1)){
-                System.out.println("A spaceship was hit by a projectile!");
-                projectile1.setTimer(8.1f);
+                if(spaceship1.getIsFriend() != projectile1.getIsPlayers()){
+                    System.out.println("A spaceship was hit by a projectile!");
+                    //projectile1.setTimer(8.1f);
+                    deactivateProjectile(projectile1);
+                }
             }
             else if(projectile2 != null && activeProjectiles.contains(projectile2)){
-                System.out.println("A spaceship was hit by a projectile!");
-                projectile2.setTimer(8.1f);
+                if(spaceship1.getIsFriend() != projectile2.getIsPlayers()){
+                    System.out.println("A spaceship was hit by a projectile!");
+                    //projectile2.setTimer(8.1f);
+                    deactivateProjectile(projectile2);
+                }
             }
         }
         else if(spaceship2 != null){
             if(projectile1 != null && activeProjectiles.contains(projectile1)){
-                System.out.println("A spaceship was hit by a projectile!");
-                projectile1.setTimer(8.1f);
+                if(spaceship2.getIsFriend() != projectile1.getIsPlayers()){
+                    System.out.println("A spaceship was hit by a projectile!");
+                    //projectile1.setTimer(8.1f);
+                    deactivateProjectile(projectile1);
+                }
             }
             else if(projectile2 != null && activeProjectiles.contains(projectile2)){
-                System.out.println("A spaceship was hit by a projectile!");
-                projectile2.setTimer(8.1f);
+                if(spaceship2.getIsFriend() != projectile2.getIsPlayers()){
+                    System.out.println("A spaceship was hit by a projectile!");
+                    //projectile2.setTimer(8.1f);
+                    deactivateProjectile(projectile2);
+                }
             }
         }
         //System.out.println("At " + currentTime + " a collision between " + uid1 + " and " + uid2 + " occured.");
