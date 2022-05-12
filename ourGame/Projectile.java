@@ -68,7 +68,7 @@ public class Projectile extends GameObject{
     public void updateProjectile(){
         timer += ourGame.getDeltaTime();
         if(timer > 8f){
-            System.out.println(timer);
+            //System.out.println(timer);
             ourGame.deactivateProjectile(this);
             return;
         }
