@@ -2,6 +2,7 @@ package ourGame;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.lang.Math;
 import java.net.InetAddress;
 import java.util.Iterator;
 import java.util.UUID;
@@ -24,8 +25,9 @@ public class GhostManager
 		ObjShape s = game.getGhostModel();
 		TextureImage t = game.getGhostTexture();
 		GhostAvatar newAvatar = new GhostAvatar(id, s, t, position);
+		newAvatar.setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(180d), 0f, 1f, 0f));
 		Matrix4f initialScale = (new Matrix4f()).scaling(0.5f);
-		newAvatar.setLocalScale(initialScale);
+		// newAvatar.setLocalScale(initialScale);
 		ghostAvatars.add(newAvatar);
 	}
 	

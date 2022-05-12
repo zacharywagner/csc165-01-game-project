@@ -10,9 +10,11 @@ import tage.input.action.AbstractInputAction;
 public class MoveAvatarAction extends AbstractInputAction{
 
     private OurGame ourGame;
+    private ProtocolClient protocolClient;
 
-    public MoveAvatarAction(OurGame ourGame){
+    public MoveAvatarAction(OurGame ourGame, ProtocolClient protocolClient){
         this.ourGame = ourGame;
+        this.protocolClient = protocolClient;
     }
 
     public void performAction(float time, Event event){
@@ -38,6 +40,10 @@ public class MoveAvatarAction extends AbstractInputAction{
             //System.out.println("Moving the avatar right!");
             avatarLocation.x += avatar.getSpeed() * time;
             avatar.setLocalLocation(avatarLocation);
+        }
+        
+        if (protocolClient != null) {
+            protocolClient.sendMoveMessage(avatarLocation);
         }
     }
 }

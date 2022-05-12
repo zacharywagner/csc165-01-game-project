@@ -1,18 +1,19 @@
 package ourGame;
 
 import java.io.*;
+import java.lang.Math;
 import java.util.*;
 import javax.script.*;
 
-import com.jogamp.opengl.util.texture.Texture;
-
 import net.java.games.input.*;
-import org.joml.Vector3f;
-import org.joml.Matrix4f;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import org.joml.*;
 import ourGame.inputActions.*;
 import tage.*;
 import tage.input.*;
 import tage.input.IInputManager.INPUT_ACTION_TYPE;
+import tage.networking.IGameConnection.ProtocolType;
 import tage.physics.*;
 import tage.physics.JBullet.*;
 import tage.shapes.*;
@@ -29,7 +30,7 @@ public class OurGame extends VariableFrameRateGame{
     }
 
     public static void main(String args[]){
-        OurGame ourGame = new OurGame();
+        OurGame ourGame = new OurGame(args[0], Integer.parseInt(args[1]));
         engine = new Engine(ourGame);
         ourGame.initializeSystem();
         ourGame.game_loop();
@@ -57,9 +58,14 @@ public class OurGame extends VariableFrameRateGame{
 
     // networking stuff
     private GhostManager gm;
+    private ProtocolClient protocolClient;
+    private String serverAddress;
+    private ProtocolType serverProtocol;
+    private int serverPort;
     private ImportedModel ghostModel;
     private TextureImage ghostTexture;
     private boolean isConnected = false;
+    private boolean isHost = false;
 
     private LinkedList<Projectile> activeProjectiles = new LinkedList<Projectile>();
     private LinkedList<Projectile> inactiveProjectiles = new LinkedList<Projectile>();
@@ -161,8 +167,11 @@ public class OurGame extends VariableFrameRateGame{
         return bossTexture;
     }
 
-    public OurGame(){
+    public OurGame(String serverAddress, int serverPort){
         super();
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
+        this.serverProtocol = ProtocolType.UDP;
     }
 
     @Override
@@ -212,6 +221,7 @@ public class OurGame extends VariableFrameRateGame{
         avatar.setSpeed((float)(double)javaScriptEngine.get("playerSpeed"));
         initializeCameras();
         initializeLights();
+        initializeNetworking();
         initializeInputs();
         initializeAudio();
         instantiateEnemy(new Vector3f(0f, 0f, 0f));
@@ -219,6 +229,7 @@ public class OurGame extends VariableFrameRateGame{
 
     @Override
     public void update() {
+        long elapsedTime = System.currentTimeMillis() - previousTime;
         previousTime = currentTime;
         currentTime = System.currentTimeMillis();
         setEarParameters();
@@ -241,7 +252,7 @@ public class OurGame extends VariableFrameRateGame{
         }
         checkForCollisions();
         physicsEngine.update((float)(currentTime - previousTime));
-        
+        processNetworking((float)elapsedTime);
     }
 
     //
@@ -282,19 +293,19 @@ public class OurGame extends VariableFrameRateGame{
         if(spaceship1 != null){
             if(spaceship2 != null){
                 if(spaceship1.getIsFriend() != spaceship2.getIsFriend()){
-                    System.out.println("Two spacesgips collided!");
+                    // System.out.println("Two spacesgips collided!");
                 }
             }
             else if(projectile1 != null && activeProjectiles.contains(projectile1)){
                 if(spaceship1.getIsFriend() != projectile1.getIsPlayers()){
-                    System.out.println("A spaceship was hit by a projectile!");
+                    // System.out.println("A spaceship was hit by a projectile!");
                     //projectile1.setTimer(8.1f);
                     deactivateProjectile(projectile1);
                 }
             }
             else if(projectile2 != null && activeProjectiles.contains(projectile2)){
                 if(spaceship1.getIsFriend() != projectile2.getIsPlayers()){
-                    System.out.println("A spaceship was hit by a projectile!");
+                    // System.out.println("A spaceship was hit by a projectile!");
                     //projectile2.setTimer(8.1f);
                     deactivateProjectile(projectile2);
                 }
@@ -303,14 +314,14 @@ public class OurGame extends VariableFrameRateGame{
         else if(spaceship2 != null){
             if(projectile1 != null && activeProjectiles.contains(projectile1)){
                 if(spaceship2.getIsFriend() != projectile1.getIsPlayers()){
-                    System.out.println("A spaceship was hit by a projectile!");
+                    // System.out.println("A spaceship was hit by a projectile!");
                     //projectile1.setTimer(8.1f);
                     deactivateProjectile(projectile1);
                 }
             }
             else if(projectile2 != null && activeProjectiles.contains(projectile2)){
                 if(spaceship2.getIsFriend() != projectile2.getIsPlayers()){
-                    System.out.println("A spaceship was hit by a projectile!");
+                    // System.out.println("A spaceship was hit by a projectile!");
                     //projectile2.setTimer(8.1f);
                     deactivateProjectile(projectile2);
                 }
@@ -348,7 +359,7 @@ public class OurGame extends VariableFrameRateGame{
 
     private void initializeInputs(){
         inputManager = engine.getInputManager();
-        MoveAvatarAction moveAvatarAction = new MoveAvatarAction(this);
+        MoveAvatarAction moveAvatarAction = new MoveAvatarAction(this, protocolClient);
         AvatarFireAction avatarFireAction = new AvatarFireAction(this);
         ArrayList<Controller> controllers = inputManager.getControllers();
         for (Controller controller : controllers) {
@@ -424,6 +435,31 @@ public class OurGame extends VariableFrameRateGame{
         physicsEngine = PhysicsEngineFactory.createPhysicsEngine(engine);
         physicsEngine.initSystem();
         physicsEngine.setGravity(gravity);
+    }
+
+    private void initializeNetworking() {
+        gm = new GhostManager(this);
+        isConnected = false;
+        try {
+            protocolClient = new ProtocolClient(InetAddress.getByName(serverAddress), serverPort, serverProtocol, this);
+            isConnected = true;
+        }
+        catch (UnknownHostException e) { e.printStackTrace(); }
+        catch (IOException e) { e.printStackTrace(); }
+
+        if(protocolClient == null) {
+            System.out.println("missing protocol host");
+        }
+        else {
+            System.out.println("sending join message to protocol host");
+            protocolClient.sendJoinMessage();
+        }
+    }
+
+    private void processNetworking(float elapsedTime) {
+        if (protocolClient != null) {
+            protocolClient.processPackets();
+        }
     }
 
     public Projectile getOrCreateProjectile(Vector3f direction, boolean isPlayers, Vector3f position, float speed){
