@@ -55,7 +55,7 @@ import tage.physics.PhysicsObject;
 * @author Scott Gordon
 */
 
-public class GameObject implements IControllable
+public class GameObject
 {
 	//------------------ STATIC AREA -----------------------
 	private static GameObject root;
@@ -385,20 +385,5 @@ public class GameObject implements IControllable
 		{	setTextureFile(textureFile);
 			Engine.getEngine().getRenderSystem().addTexture((TextureImage)this);
 		}
-	}
-
-	/** Angles the object upward or downward the amount specified by amount. Positive values angle upward, negative values angle downward*/
-	public void pitch(float amount) {
-		Matrix4f oldRotation = getLocalRotation();
-		oldRotation.rotateX(-amount);
-		setLocalRotation(oldRotation);
-		update();
-	}
-	/** Rotates the object left or right the amount specified by amount. Positive values rotate left, negative values rotate right*/
-	public void yaw(float amount) {
-		Matrix4f oldRotation = getLocalRotation();
-		oldRotation.rotateY(amount);
-		setLocalRotation(oldRotation);
-		update();
 	}
 }

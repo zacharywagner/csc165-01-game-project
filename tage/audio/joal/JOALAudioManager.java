@@ -25,7 +25,7 @@ import tage.audio.*;
  * <code>
  * 	distance = max(distance,AL_REFERENCE_DISTANCE);		<br>
  * 	distance = min(distance,AL_MAX_DISTANCE);		<br>
- * 	gain = AL_REFERENCE_DISTANCE / (AL_REFERENCE_DISTANCE + AL_ROLLOFF_FACTOR * (distance ï¿½ AL_REFERENCE_DISTANCE));
+ * 	gain = AL_REFERENCE_DISTANCE / (AL_REFERENCE_DISTANCE + AL_ROLLOFF_FACTOR * (distance – AL_REFERENCE_DISTANCE));
  * </code>
  * 
  * 
