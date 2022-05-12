@@ -8,6 +8,8 @@ import tage.networking.server.GameConnectionServer;
 import tage.networking.server.IClientInfo;
 
 public class GameServer extends GameConnectionServer<UUID> {
+	private UUID hostClientId;
+
     public GameServer(int localPort) throws IOException {
         super(localPort, ProtocolType.UDP);
     }
@@ -27,7 +29,12 @@ public class GameServer extends GameConnectionServer<UUID> {
 					UUID clientID = UUID.fromString(messageTokens[1]);
 					addClient(ci, clientID);
 					System.out.println("Join request received from - " + clientID.toString());
-					sendJoinedMessage(clientID, true);
+					boolean isHost = false;
+					if(hostClientId == null) {
+						hostClientId = clientID;
+						isHost = true;
+					}
+					sendJoinedMessage(clientID, true, isHost);
 				} 
 				catch (IOException e) {	e.printStackTrace(); }
             }
@@ -92,14 +99,18 @@ public class GameServer extends GameConnectionServer<UUID> {
 	// request was able to be granted. 
 	// Message Format: (join,success) or (join,failure)
 	
-	public void sendJoinedMessage(UUID clientID, boolean success) {
+	public void sendJoinedMessage(UUID clientID, boolean success, boolean isHost) {
         try {
             System.out.println("trying to confirm join");
 			String message = new String("join,");
 			if(success)
-				message += "success";
+				message += "success,";
 			else
-				message += "failure";
+				message += "failure,";
+			if(isHost)
+				message += "host";
+			else
+				message += "guest";
 			sendPacket(message, clientID);
 		} 
 		catch (IOException e) { e.printStackTrace();}

@@ -44,7 +44,16 @@ public class ProtocolClient extends GameConnectionClient {
 				if(messageTokens[1].compareTo("failure") == 0) {
                     System.out.println("join failure confirmed");
 					game.setIsConnected(false);
-			}	}
+				}
+				if(messageTokens[2].compareTo("host") == 0) {
+					System.out.println("you are the host");
+					game.setIsHost(true);
+				}
+				if(messageTokens[2].compareTo("guest") == 0) {
+					System.out.println("you are a guest");
+					game.setIsHost(false);
+				}
+			}
 			
 			// Handle BYE message
 			// Format: (bye,remoteId)
