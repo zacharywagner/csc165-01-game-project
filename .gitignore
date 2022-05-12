@@ -2,7 +2,7 @@
 *.class
 
 # Batch files
-.bat
+*.bat
 
 # Log file
 *.log
