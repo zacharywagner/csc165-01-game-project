@@ -18,11 +18,11 @@ public class Boss extends Spaceship{
         setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(270d), 0f, 1f, 0f));
     }
 
-    public void shotgun(){
+    public void shotgun(int offset){
         for(int i = 0; i < 33; i++){
             Vector3f direction = new Vector3f(-1f, 0f, 0f);
             float rad = (float)(Math.PI / 32d);
-            direction.rotateY(i * rad);
+            direction.rotateY((i + offset) * rad);
             getOurGame().getOrCreateProjectile(direction, false, getWorldLocation(), 16f);
         }
     }
