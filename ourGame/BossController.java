@@ -1,7 +1,5 @@
 package ourGame;
 
-import tage.*;
-import tage.ai.*;
 import tage.ai.behaviortrees.BehaviorTree;
 
 public class BossController {
