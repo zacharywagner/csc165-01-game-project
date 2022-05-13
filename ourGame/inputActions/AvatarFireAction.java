@@ -19,7 +19,7 @@ public class AvatarFireAction extends AbstractInputAction{
     }
 
     public void performAction(float time, Event event){
-        if(System.currentTimeMillis() - lastActionTime > 48){
+        if(System.currentTimeMillis() - lastActionTime > 75){
             lastActionTime = System.currentTimeMillis();
         }
         else{
@@ -34,5 +34,6 @@ public class AvatarFireAction extends AbstractInputAction{
         if(!ourGame.getIsSinglePlayer()){
             protocolClient.sendSendShotMessage(direction, isPlayers, position, speed);
         }
+        ourGame.getBoss().fireAtPlayers();
     }
 }

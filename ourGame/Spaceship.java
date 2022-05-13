@@ -7,6 +7,11 @@ public class Spaceship extends GameObject{
     private OurGame ourGame;
     private int uid;
     private boolean isFriend;
+    private int health;
+
+    public int getHealth(){
+        return health;
+    }
 
     public int getUid(){
         return uid;
@@ -18,6 +23,10 @@ public class Spaceship extends GameObject{
 
     public boolean getIsFriend(){
         return isFriend;
+    }
+
+    public void setHealth(int health){
+        this.health = health;
     }
 
     public Spaceship(GameObject parent, ObjShape objShape, OurGame ourGame, float[] size, TextureImage textureImage, boolean isFriend){
@@ -33,5 +42,16 @@ public class Spaceship extends GameObject{
         setPhysicsObject(physicsObject);
         ourGame.registerSpaceship(this);
         this.isFriend = isFriend;
+    }
+
+    public void dealDamage(int damage){
+        health -= damage;
+        if(health <= 0){
+            onDeath();    
+        }
+    }
+
+    public void onDeath(){
+        System.out.println("I am dead!");
     }
 }

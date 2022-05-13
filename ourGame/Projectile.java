@@ -67,11 +67,17 @@ public class Projectile extends GameObject{
 
     public void updateProjectile(){
         timer += ourGame.getDeltaTime();
-        if(timer > 8f){
+        if(timer > 4f){
             //System.out.println(timer);
             ourGame.deactivateProjectile(this);
             return;
         }
+        /*
+        if(ourGame.isTouchingTerrain(this)){
+            ourGame.deactivateProjectile(this);
+            return;
+        }
+        */
         Vector3f deltaPosition = new Vector3f(direction.x, direction.y, direction.z);
         deltaPosition.mul(speed).mul((float)ourGame.getDeltaTime());
         Vector3f localLocation = getLocalLocation();

@@ -11,4 +11,6 @@ with(JavaPackages){
     var lightGlobalAmbient = new Vector3f(0.5, 0.5, 0.5);
     var playerSpeed = 24.0;
     var playerStartLocation = new Vector3f(0.0, 0.0, 24.0);
+    var terrainHeight = -12.0;
+    var terrainScale = new Vector3f(48.0, 24.0, 48.0);
 }

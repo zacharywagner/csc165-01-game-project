@@ -5,6 +5,8 @@ import java.lang.Math;
 import java.util.*;
 import javax.script.*;
 
+import com.jogamp.opengl.util.texture.Texture;
+
 import net.java.games.input.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -98,6 +100,17 @@ public class OurGame extends VariableFrameRateGame{
     private TextureImage bossTexture;
     private Boss boss;
     private Light bossLight;
+    private GameObject terrain1, terrain2, terrain3, terrain4;
+    private ObjShape terrainShape;
+    private TextureImage terrainHeightMap1;
+    private TextureImage terrainTexture1;
+    private TextureImage terrainHeightMap2;
+    private TextureImage terrainTexture2;
+    private TextureImage terrainHeightMap3;
+    private TextureImage terrainTexture3;
+    private TextureImage terrainHeightMap4;
+    private TextureImage terrainTexture4;
+    private float terrainSpeed;
 
 
     public void registerSpaceship(Spaceship spaceship){
@@ -190,6 +203,14 @@ public class OurGame extends VariableFrameRateGame{
         return isSinglePlayer;
     }
 
+    public Boss getBoss(){
+        return boss;
+    }
+
+    public HashMap<Integer, Spaceship> getSpaceships(){
+        return spaceships;
+    }
+    
     public OurGame(){
         super();
         isSinglePlayer = true;
@@ -222,6 +243,7 @@ public class OurGame extends VariableFrameRateGame{
         bossAnimatedShape.loadAnimation("KICK", "mech_kick.rka");
         bossAnimatedShape.loadAnimation("SUMMON", "summon.rka");
         bossAnimatedShape.loadAnimation("DEAD", "dead.rka");
+        terrainShape = new TerrainPlane(1000);
     }
 
     @Override
@@ -230,7 +252,14 @@ public class OurGame extends VariableFrameRateGame{
         ghostTexture = new TextureImage("player.png");
         enemyTexture = new TextureImage("enemy.png");
         bossTexture = new TextureImage("mechman.png");
-
+        terrainHeightMap1 = new TextureImage("terrain2.png");
+        terrainTexture1 = new TextureImage("terrain2.png");
+        terrainHeightMap2 = new TextureImage("terrain3.png");
+        terrainTexture2 = new TextureImage("terrain3.png");
+        terrainHeightMap3 = new TextureImage("terrain4.png");
+        terrainTexture3 = new TextureImage("terrain4.png");
+        terrainHeightMap4 = new TextureImage("terrain5.png");
+        terrainTexture4 = new TextureImage("terrain5.png");
     }
 
     @Override
@@ -238,6 +267,14 @@ public class OurGame extends VariableFrameRateGame{
         initializePhysics();
         avatar = new Player(this);
         boss = new Boss(this);
+        terrain1 = new GameObject(GameObject.root(), terrainShape, terrainTexture2);
+        terrain1.setHeightMap(terrainHeightMap2);
+        terrain2 = new GameObject(GameObject.root(), terrainShape, terrainTexture1);
+        terrain2.setHeightMap(terrainHeightMap1);
+        terrain3 = new GameObject(GameObject.root(), terrainShape, terrainTexture3);
+        terrain3.setHeightMap(terrainHeightMap3);
+        terrain4 = new GameObject(GameObject.root(), terrainShape, terrainTexture4);
+        terrain4.setHeightMap(terrainHeightMap4);
     }
 
     @Override
@@ -248,6 +285,7 @@ public class OurGame extends VariableFrameRateGame{
         runScript(file);
         avatar.setSpeed((float)(double)javaScriptEngine.get("playerSpeed"));
         avatar.setLocalLocation((Vector3f)javaScriptEngine.get("playerStartLocation"));
+        setupTerrain();
         initializeCameras();
         initializeLights();
         if(!isSinglePlayer){
@@ -256,6 +294,18 @@ public class OurGame extends VariableFrameRateGame{
         initializeInputs();
         initializeAudio();
         instantiateEnemy(new Vector3f(0f, 0f, 0f));
+    }
+
+    public void setupTerrain(){
+        terrain1.setLocalTranslation(new Matrix4f().translate(new Vector3f(-88f, (float)(double)javaScriptEngine.get("terrainHeight"), 96f)));
+        terrain1.setLocalScale(new Matrix4f().scale((Vector3f)javaScriptEngine.get("terrainScale")));
+        terrain2.setLocalTranslation(new Matrix4f().translate(new Vector3f(-88f, (float)(double)javaScriptEngine.get("terrainHeight"), 0f)));
+        terrain2.setLocalScale(new Matrix4f().scale((Vector3f)javaScriptEngine.get("terrainScale")));
+        terrain3.setLocalTranslation(new Matrix4f().translate(new Vector3f(88f, (float)(double)javaScriptEngine.get("terrainHeight"), 96f)));
+        terrain3.setLocalScale(new Matrix4f().scale((Vector3f)javaScriptEngine.get("terrainScale")));
+        terrain4.setLocalTranslation(new Matrix4f().translate(new Vector3f(88f, (float)(double)javaScriptEngine.get("terrainHeight"), 0f)));
+        terrain4.setLocalScale(new Matrix4f().scale((Vector3f)javaScriptEngine.get("terrainScale")));
+        terrainSpeed = 10f;
     }
 
     @Override
@@ -270,10 +320,11 @@ public class OurGame extends VariableFrameRateGame{
         enemies.forEach((key, value) -> {
             value.updateEnemy();
         });
+        updateTerrain();
         bossAnimatedShape.updateAnimation();
         Vector3f location = boss.getWorldLocation();
         location.y += 48f;
-        bossLight.setLocation(location);
+        //bossLight.setLocation(location);
         updateProjectiles();
         for (GameObject go:engine.getSceneGraph().getGameObjects()){
             if (go.getPhysicsObject() != null){ 
@@ -285,10 +336,46 @@ public class OurGame extends VariableFrameRateGame{
             } 
         }
         checkForCollisions();
+        if(isTouchingTerrain(avatar)){
+            //System.out.println("Avatar is touching the terrain!");
+        }
         physicsEngine.update((float)(currentTime - previousTime));
         if(!isSinglePlayer){
             processNetworking((float)elapsedTime);
         }
+    }
+
+    private void updateTerrain(){
+        Vector3f location = terrain1.getLocalLocation();
+        float deltaPositionZ = (float)getDeltaTime() * terrainSpeed;
+        location.z += deltaPositionZ;
+        if(location.z > 94f){
+            location.z = terrain2.getWorldLocation().z - 96f;
+            location.z += deltaPositionZ;
+        }
+        terrain1.setLocalLocation(location);
+
+        location = terrain2.getLocalLocation();
+        location.z += deltaPositionZ;
+        if(location.z > 94f){
+            location.z = terrain1.getWorldLocation().z - 96f;
+        }
+        terrain2.setLocalLocation(location);
+
+        location = terrain3.getLocalLocation();
+        location.z += deltaPositionZ;
+        if(location.z > 94f){
+            location.z = terrain4.getWorldLocation().z - 96f;
+            location.z += deltaPositionZ;
+        }
+        terrain3.setLocalLocation(location);
+
+        location = terrain4.getLocalLocation();
+        location.z += deltaPositionZ;
+        if(location.z > 94f){
+            location.z = terrain3.getWorldLocation().z - 96f;
+        }
+        terrain4.setLocalLocation(location);
     }
 
     //
@@ -374,6 +461,50 @@ public class OurGame extends VariableFrameRateGame{
         }
         System.out.println();
         */
+    }
+
+    public boolean isTouchingTerrain(GameObject gameObject){
+        Vector3f location = gameObject.getWorldLocation();
+        location.x -= terrain1.getWorldLocation().x;
+        location.y -= terrain1.getWorldLocation().y;
+        location.z -= terrain1.getWorldLocation().z;
+        float height = terrain1.getHeight(location.x, location.z);
+        height += terrain1.getWorldLocation().y;
+        if(avatar.getWorldLocation().y < height){
+            //System.out.println("1");
+            return true;
+        }
+        location = gameObject.getWorldLocation();
+        location.x -= terrain2.getWorldLocation().x;
+        location.y -= terrain2.getWorldLocation().y;
+        location.z -= terrain2.getWorldLocation().z;
+        height = terrain2.getHeight(location.x, location.z);
+        height += terrain2.getWorldLocation().y;
+        if(avatar.getWorldLocation().y < height){
+            //System.out.println("2");
+            return true;
+        }
+        location = gameObject.getWorldLocation();
+        location.x -= terrain3.getWorldLocation().x;
+        location.y -= terrain3.getWorldLocation().y;
+        location.z -= terrain3.getWorldLocation().z;
+        height = terrain3.getHeight(location.x, location.z);
+        height += terrain3.getWorldLocation().y;
+        if(avatar.getWorldLocation().y < height){
+            //System.out.println("3");
+            return true;
+        }
+        location = gameObject.getWorldLocation();
+        location.x -= terrain4.getWorldLocation().x;
+        location.y -= terrain4.getWorldLocation().y;
+        location.z -= terrain4.getWorldLocation().z;
+        height = terrain4.getHeight(location.x, location.z);
+        height += terrain4.getWorldLocation().y;
+        if(avatar.getWorldLocation().y < height){
+            //System.out.println("4");
+            return true;
+        }
+        return false;
     }
 
     //
