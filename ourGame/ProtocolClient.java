@@ -44,7 +44,16 @@ public class ProtocolClient extends GameConnectionClient {
 				if(messageTokens[1].compareTo("failure") == 0) {
                     System.out.println("join failure confirmed");
 					game.setIsConnected(false);
-			}	}
+				}
+				if(messageTokens[2].compareTo("host") == 0) {
+					System.out.println("you are the host");
+					game.setIsHost(true);
+				}
+				if(messageTokens[2].compareTo("guest") == 0) {
+					System.out.println("you are a guest");
+					game.setIsHost(false);
+				}
+			}
 			
 			// Handle BYE message
 			// Format: (bye,remoteId)
@@ -123,6 +132,37 @@ public class ProtocolClient extends GameConnectionClient {
 				float speed = Float.parseFloat(messageTokens[9]);
 				game.getOrCreateProjectile(direction, isPlayers, location, speed);
 			}
+
+			// Handle CREATENPC message
+			// Format (createnpc,npcid,x,y,z)
+			if (messageTokens[0].compareTo("createnpc") == 0) {
+				int npcid = Integer.parseInt(messageTokens[1]);
+				Vector3f position = new Vector3f(
+					Float.parseFloat(messageTokens[2]),
+					Float.parseFloat(messageTokens[3]),
+					Float.parseFloat(messageTokens[4])
+				);
+				ghostManager.createGhostNPC(npcid, position);
+			}
+
+			// Handle MOVENPC message
+			// Format (movenpc,npcid,x,y,z)
+			if (messageTokens[0].compareTo("movenpc") == 0) {
+				int npcid = Integer.parseInt(messageTokens[1]);
+				Vector3f position = new Vector3f(
+					Float.parseFloat(messageTokens[2]),
+					Float.parseFloat(messageTokens[3]),
+					Float.parseFloat(messageTokens[4])
+				);
+				ghostManager.updateGhostNPC(npcid, position);
+			}
+
+			// Handle DESTROYNPC message
+			// Format (movenpc,npcid)
+			if (messageTokens[0].compareTo("destroynpc") == 0) {
+				int npcid = Integer.parseInt(messageTokens[1]);
+				ghostManager.removeGhostNPC(npcid);
+			}
         }
     }
 	
@@ -197,10 +237,11 @@ public class ProtocolClient extends GameConnectionClient {
         catch (IOException e) {	e.printStackTrace();}
     }
 
+	// Clients inform each other that a shot has been fired to render it for all
 	// Format (sendshot,clientId,dirx,diry,dirz,isPlayers,locx,locy,locz,speed)
 	public void sendSendShotMessage(Vector3f direction, boolean isPlayers, Vector3f location, float speed) {
-		String message = new String("sendshot," + id.toString());
 		try{
+			String message = new String("sendshot," + id.toString());
 			message += "," + direction.x();
 			message += "," + direction.y();
 			message += "," + direction.z();
@@ -215,4 +256,47 @@ public class ProtocolClient extends GameConnectionClient {
 		catch (IOException e) {	e.printStackTrace();}
 		
 	}
+
+	// Client informs everyone of the creation of a new NPC. Only the host client should be doing this.
+	// Format (createnpc,clientId,npcid,x,y,z)
+	public void sendCreateNpcMessage(int npcid, Vector3f position) {
+		try {
+			String message = new String("createnpc," + id.toString());
+			message += "," + npcid;
+			message += "," + position.x();
+			message += "," + position.y();
+			message += "," + position.z();
+
+			sendPacket(message);
+		}
+		catch (IOException e) {	e.printStackTrace();}
+	}
+
+	// Client informs everyone of the movement of a specified NPC. Only the host client should be doing this.
+	// Format (movenpc,clientId,npcid,x,y,z)
+	public void sendMoveNpcMessage(int npcid, Vector3f position) {
+		try {
+			String message = new String("movenpc," + id.toString());
+			message += "," + npcid;
+			message += "," + position.x();
+			message += "," + position.y();
+			message += "," + position.z();
+
+			sendPacket(message);
+		}
+		catch (IOException e) {	e.printStackTrace();}
+	}
+
+	// Client informs everyone of the destruction of a specified NPC. Only the host client should be doing this.
+	// Format (destroynpc,clientId,npcid)
+	public void sendDestroyNpcMessage(int npcid) {
+		try {
+			String message = new String("destroynpc," + id.toString());
+			message += "," + npcid;
+
+			sendPacket(message);
+		}
+		catch (IOException e) {	e.printStackTrace();}
+	}
+
 }

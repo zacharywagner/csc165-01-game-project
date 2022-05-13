@@ -128,6 +128,10 @@ public class OurGame extends VariableFrameRateGame{
         isConnected = value;
     }
 
+    public void setIsHost(boolean value) {
+        isHost = value;
+    }
+
     public Vector3f getPlayerPosition() {
         return avatar.getLocalLocation();
     }

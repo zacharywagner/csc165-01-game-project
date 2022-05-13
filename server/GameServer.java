@@ -8,6 +8,8 @@ import tage.networking.server.GameConnectionServer;
 import tage.networking.server.IClientInfo;
 
 public class GameServer extends GameConnectionServer<UUID> {
+	private UUID hostClientId;
+
     public GameServer(int localPort) throws IOException {
         super(localPort, ProtocolType.UDP);
     }
@@ -27,7 +29,12 @@ public class GameServer extends GameConnectionServer<UUID> {
 					UUID clientID = UUID.fromString(messageTokens[1]);
 					addClient(ci, clientID);
 					System.out.println("Join request received from - " + clientID.toString());
-					sendJoinedMessage(clientID, true);
+					boolean isHost = false;
+					if(hostClientId == null) {
+						hostClientId = clientID;
+						isHost = true;
+					}
+					sendJoinedMessage(clientID, true, isHost);
 				} 
 				catch (IOException e) {	e.printStackTrace(); }
             }
@@ -79,11 +86,25 @@ public class GameServer extends GameConnectionServer<UUID> {
 			// SENDSHOT --- Case where server receives a SENDSHOT message
 			// Format (sendshot,clientIc,dirx,diry,dirz,isPlayers,locx,locy,locz,speed)
 			if(messageTokens[0].compareTo("sendshot") == 0) {
-				try {
-					UUID clientID = UUID.fromString(messageTokens[1]);
-					forwardPacketToAll(message, clientID);	
-				}
-				catch (IOException e) { e.printStackTrace();}
+				relayMessage(message, messageTokens[1]);
+			}
+
+			// CREATENPC --- Case where server receives a CREATENPC message
+			// Format (createnpc,clientId,npcid,x,y,z)
+			if(messageTokens[0].compareTo("createNPC") == 0) {
+				relayMessage(message, messageTokens[1]);
+			}
+
+			// MOVENPC --- Case where server receives a MOVENPC message
+			// Format (movenpc,clientId,npcid,x,y,z)
+			if(messageTokens[0].compareTo("movenpc") == 0) {
+				relayMessage(message, messageTokens[1]);
+			}
+
+			// DESTROYNPC --- Case where server receives a DESTROYNPC message
+			// Format (movenpc,clientId,npcid)
+			if(messageTokens[0].compareTo("destroynpc") == 0) {
+				relayMessage(message, messageTokens[1]);
 			}
         }
     }
@@ -92,14 +113,18 @@ public class GameServer extends GameConnectionServer<UUID> {
 	// request was able to be granted. 
 	// Message Format: (join,success) or (join,failure)
 	
-	public void sendJoinedMessage(UUID clientID, boolean success) {
+	public void sendJoinedMessage(UUID clientID, boolean success, boolean isHost) {
         try {
             System.out.println("trying to confirm join");
 			String message = new String("join,");
 			if(success)
-				message += "success";
+				message += "success,";
 			else
-				message += "failure";
+				message += "failure,";
+			if(isHost)
+				message += "host";
+			else
+				message += "guest";
 			sendPacket(message, clientID);
 		} 
 		catch (IOException e) { e.printStackTrace();}
@@ -195,4 +220,12 @@ public class GameServer extends GameConnectionServer<UUID> {
 		} 
 		catch (IOException e) {	e.printStackTrace();}
     }
+
+	public void relayMessage(String message, String recipientID) {
+		try {
+			UUID clientID = UUID.fromString(recipientID);
+			forwardPacketToAll(message, clientID);	
+		}
+		catch (IOException e) { e.printStackTrace();}
+	}
 }
