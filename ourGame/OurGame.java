@@ -321,11 +321,13 @@ public class OurGame extends VariableFrameRateGame{
         inputManager.update((float)getDeltaTime());
         //System.out.println(avatar.getWorldLocation());
         avatar.movePlayerInBounds();
+        boss.getBossController().update();
+        boss.updateBoss();
+        bossAnimatedShape.updateAnimation();
         enemies.forEach((key, value) -> {
             value.updateEnemy();
         });
         updateTerrain();
-        bossAnimatedShape.updateAnimation();
         Vector3f location = boss.getWorldLocation();
         location.y += 48f;
         //bossLight.setLocation(location);

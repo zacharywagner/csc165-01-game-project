@@ -7,7 +7,7 @@ public class Spaceship extends GameObject{
     private OurGame ourGame;
     private int uid;
     private boolean isFriend;
-    private int health;
+    private int health = 1;
 
     public int getHealth(){
         return health;

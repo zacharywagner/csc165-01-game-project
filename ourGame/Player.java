@@ -10,7 +10,7 @@ public class Player extends Spaceship {
     private float speed;
 
     public Player(OurGame ourGame){
-        super(GameObject.root(), ourGame.getPlayerModel(), ourGame, new float[]{1f, 1f, 1f}, ourGame.getPlayerTexture(), true);
+        super(GameObject.root(), ourGame.getPlayerModel(), ourGame, new float[]{1f, 20f, 1f}, ourGame.getPlayerTexture(), true);
         setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(180d), 0f, 1f, 0f));
         System.out.println(getPhysicsObject().getUID());
     }

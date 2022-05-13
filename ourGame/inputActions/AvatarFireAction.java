@@ -34,6 +34,5 @@ public class AvatarFireAction extends AbstractInputAction{
         if(!ourGame.getIsSinglePlayer()){
             protocolClient.sendSendShotMessage(direction, isPlayers, position, speed);
         }
-        ourGame.getBoss().fireAtPlayers();
     }
 }
