@@ -210,6 +210,10 @@ public class OurGame extends VariableFrameRateGame{
     public HashMap<Integer, Spaceship> getSpaceships(){
         return spaceships;
     }
+
+    public int getProjectileCount(){
+        return activeProjectiles.size() + inactiveProjectiles.size();
+    }
     
     public OurGame(){
         super();

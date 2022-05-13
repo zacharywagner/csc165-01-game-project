@@ -37,6 +37,7 @@ public class Projectile extends GameObject{
         physicsObject.setFriction(0f);
         setPhysicsObject(physicsObject);
         ourGame.registerProjectile(this);
+        System.out.println("Projectiles: " + ourGame.getProjectileCount());
         sound = ourGame.createSound(ourGame.getAudioResource("laser9"), SoundType.SOUND_EFFECT, 100, false);
 	if(sound != null){
 		sound.setRollOff(0.1f);
