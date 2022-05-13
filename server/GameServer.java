@@ -86,11 +86,25 @@ public class GameServer extends GameConnectionServer<UUID> {
 			// SENDSHOT --- Case where server receives a SENDSHOT message
 			// Format (sendshot,clientIc,dirx,diry,dirz,isPlayers,locx,locy,locz,speed)
 			if(messageTokens[0].compareTo("sendshot") == 0) {
-				try {
-					UUID clientID = UUID.fromString(messageTokens[1]);
-					forwardPacketToAll(message, clientID);	
-				}
-				catch (IOException e) { e.printStackTrace();}
+				relayMessage(message, messageTokens[1]);
+			}
+
+			// CREATENPC --- Case where server receives a CREATENPC message
+			// Format (createnpc,clientId,npcid,x,y,z)
+			if(messageTokens[0].compareTo("createNPC") == 0) {
+				relayMessage(message, messageTokens[1]);
+			}
+
+			// MOVENPC --- Case where server receives a MOVENPC message
+			// Format (movenpc,clientId,npcid,x,y,z)
+			if(messageTokens[0].compareTo("movenpc") == 0) {
+				relayMessage(message, messageTokens[1]);
+			}
+
+			// DESTROYNPC --- Case where server receives a DESTROYNPC message
+			// Format (movenpc,clientId,npcid)
+			if(messageTokens[0].compareTo("destroynpc") == 0) {
+				relayMessage(message, messageTokens[1]);
 			}
         }
     }
@@ -206,4 +220,12 @@ public class GameServer extends GameConnectionServer<UUID> {
 		} 
 		catch (IOException e) {	e.printStackTrace();}
     }
+
+	public void relayMessage(String message, String recipientID) {
+		try {
+			UUID clientID = UUID.fromString(recipientID);
+			forwardPacketToAll(message, clientID);	
+		}
+		catch (IOException e) { e.printStackTrace();}
+	}
 }

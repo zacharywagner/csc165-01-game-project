@@ -15,6 +15,7 @@ public class GhostManager
 {
 	private OurGame game;
 	private Vector<GhostAvatar> ghostAvatars = new Vector<GhostAvatar>();
+	private Vector<GhostNPC> ghostNPCs = new Vector<GhostNPC>();
 
 	public GhostManager(VariableFrameRateGame vfrg) {
         game = (OurGame)vfrg;
@@ -22,12 +23,10 @@ public class GhostManager
 	
 	public void createGhostAvatar(UUID id, Vector3f position) throws IOException {
         System.out.println("adding ghost with ID --> " + id);
-		ObjShape s = game.getGhostModel();
-		TextureImage t = game.getGhostTexture();
+		ObjShape s = game.getPlayerModel();
+		TextureImage t = game.getPlayerTexture();
 		GhostAvatar newAvatar = new GhostAvatar(id, s, t, position);
 		newAvatar.setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(180d), 0f, 1f, 0f));
-		Matrix4f initialScale = (new Matrix4f()).scaling(0.5f);
-		// newAvatar.setLocalScale(initialScale);
 		ghostAvatars.add(newAvatar);
 	}
 	
@@ -58,6 +57,47 @@ public class GhostManager
         GhostAvatar ghostAvatar = findAvatar(id);
 		if (ghostAvatar != null) {
             ghostAvatar.setPosition(position);
+		}
+		else {
+            System.out.println("tried to update ghost avatar position, but unable to find ghost in list");
+		}
+	}
+
+	public void removeGhostNPC(int id) {
+        GhostNPC ghostNPC = findNPC(id);
+		if(ghostNPC != null) {
+            game.getEngine().getSceneGraph().removeGameObject(ghostNPC);
+			ghostNPCs.remove(ghostNPC);
+		}
+		else {
+            System.out.println("tried to remove, but unable to find ghost in list");
+		}
+	}
+
+	public void createGhostNPC(int uid, Vector3f position) {
+		System.out.println("adding NPC with id --> " + uid);
+		ObjShape s = game.getEnemyModel();
+		TextureImage t = game.getEnemyTexture();
+		GhostNPC g = new GhostNPC(uid, s, t, position);
+		ghostNPCs.add(g);
+	}
+
+	private GhostNPC findNPC(int id) {
+        GhostNPC ghostNPC;
+		Iterator<GhostNPC> it = ghostNPCs.iterator();
+		while(it.hasNext()) {
+            ghostNPC = it.next();
+			if(ghostNPC.getID() == id) {
+                return ghostNPC;
+			}
+		}		
+		return null;
+	}
+
+	public void updateGhostNPC(int id, Vector3f position) {
+        GhostNPC ghostNPC = findNPC(id);
+		if (ghostNPC != null) {
+            ghostNPC.setPosition(position);
 		}
 		else {
             System.out.println("tried to update ghost avatar position, but unable to find ghost in list");
