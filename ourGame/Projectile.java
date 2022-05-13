@@ -38,7 +38,9 @@ public class Projectile extends GameObject{
         setPhysicsObject(physicsObject);
         ourGame.registerProjectile(this);
         sound = ourGame.createSound(ourGame.getAudioResource("laser9"), SoundType.SOUND_EFFECT, 100, false);
-        sound.setRollOff(0.1f);
+	if(sound != null){
+		sound.setRollOff(0.1f);
+	}
     }
 
     public void initialize(Vector3f direction, boolean isPlayers, Vector3f location, float speed){
@@ -50,6 +52,7 @@ public class Projectile extends GameObject{
         setLocalLocation(location);
         this.speed = speed;
         timer = 0f;
+	if(sound != null){
         sound.setLocation(location);
         if(!isPlayers){
             sound.setVolume(100);
@@ -58,6 +61,7 @@ public class Projectile extends GameObject{
             sound.setVolume(50);
         }
         sound.play();
+	}
         getRenderStates().enableRendering();
         float values[] = new float[16];
         double[] transform = OurGame.toDoubleArray(getLocalTranslation().get(values));
