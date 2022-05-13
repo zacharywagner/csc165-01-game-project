@@ -17,6 +17,7 @@ import tage.Light.LightType;
 import tage.input.*;
 import tage.input.IInputManager.INPUT_ACTION_TYPE;
 import tage.networking.IGameConnection.ProtocolType;
+import tage.nodeControllers.FloatController;
 import tage.physics.*;
 import tage.physics.JBullet.*;
 import tage.shapes.*;
@@ -111,6 +112,7 @@ public class OurGame extends VariableFrameRateGame{
     private TextureImage terrainHeightMap4;
     private TextureImage terrainTexture4;
     private float terrainSpeed;
+    private FloatController floatController;
 
 
     public void registerSpaceship(Spaceship spaceship){
@@ -214,6 +216,10 @@ public class OurGame extends VariableFrameRateGame{
     public int getProjectileCount(){
         return activeProjectiles.size() + inactiveProjectiles.size();
     }
+
+    public FloatController getFloatController(){
+        return floatController;
+    }
     
     public OurGame(){
         super();
@@ -289,6 +295,10 @@ public class OurGame extends VariableFrameRateGame{
         runScript(file);
         avatar.setSpeed((float)(double)javaScriptEngine.get("playerSpeed"));
         avatar.setLocalLocation((Vector3f)javaScriptEngine.get("playerStartLocation"));
+        floatController = new FloatController(engine, boss.getWorldLocation().x, (float)(double)javaScriptEngine.get("bossAmplitude"), (float)(double)javaScriptEngine.get("bossPeriod"));
+        floatController.addTarget(boss);
+        engine.getSceneGraph().addNodeController(floatController);
+        floatController.enable();
         setupTerrain();
         initializeCameras();
         initializeLights();

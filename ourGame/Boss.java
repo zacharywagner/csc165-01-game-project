@@ -61,6 +61,9 @@ public class Boss extends Spaceship{
     }
 
     public void updateBoss(){
+        if(timer > 5.5f){
+            getOurGame().getFloatController().enable();
+        }
         switch(state){
             case NONE:{
                 break;
@@ -92,11 +95,13 @@ public class Boss extends Spaceship{
     }
 
     public void becomeSniper(){
+        getOurGame().getFloatController().disable();
         state = State.SNIPER;
         timer = 0f;
     }
 
     public void becomeShotgun(){
+        getOurGame().getFloatController().disable();
         state = State.SHOTGUN;
         timer = 0f;
         shotTimer = 0f;
