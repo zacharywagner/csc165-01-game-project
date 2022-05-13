@@ -11,6 +11,7 @@ import java.net.UnknownHostException;
 import org.joml.*;
 import ourGame.inputActions.*;
 import tage.*;
+import tage.Light.LightType;
 import tage.input.*;
 import tage.input.IInputManager.INPUT_ACTION_TYPE;
 import tage.networking.IGameConnection.ProtocolType;
@@ -96,6 +97,7 @@ public class OurGame extends VariableFrameRateGame{
     private AnimatedShape bossAnimatedShape;
     private TextureImage bossTexture;
     private Boss boss;
+    private Light bossLight;
 
 
     public void registerSpaceship(Spaceship spaceship){
@@ -241,6 +243,7 @@ public class OurGame extends VariableFrameRateGame{
         File file = new File("assets/scripts/initializeOurGame.js");
         runScript(file);
         avatar.setSpeed((float)(double)javaScriptEngine.get("playerSpeed"));
+        avatar.setLocalLocation((Vector3f)javaScriptEngine.get("playerStartLocation"));
         initializeCameras();
         initializeLights();
         if(!isSinglePlayer){
@@ -264,6 +267,9 @@ public class OurGame extends VariableFrameRateGame{
             value.updateEnemy();
         });
         bossAnimatedShape.updateAnimation();
+        Vector3f location = boss.getWorldLocation();
+        location.y += 48f;
+        bossLight.setLocation(location);
         updateProjectiles();
         for (GameObject go:engine.getSceneGraph().getGameObjects()){
             if (go.getPhysicsObject() != null){ 
@@ -381,6 +387,14 @@ public class OurGame extends VariableFrameRateGame{
         Vector3f globalAmbient = (Vector3f)javaScriptEngine.get("lightGlobalAmbient");
         Light.setGlobalAmbient(globalAmbient.x, globalAmbient.y, globalAmbient.z);
         (engine.getSceneGraph()).addLight((Light)javaScriptEngine.get("light"));
+        Light bossLight = new Light();
+        bossLight.setType(LightType.SPOTLIGHT);
+        Vector3f location = boss.getWorldLocation();
+        location.y += 48f;
+        bossLight.setLocation(location);
+        bossLight.setDirection(new Vector3f(0f, -1f, 0f));
+        bossLight.setAmbient(.4f, .4f, .4f);
+        engine.getSceneGraph().addLight(bossLight);
     }
 
     private void initializeInputs(){
@@ -396,35 +410,48 @@ public class OurGame extends VariableFrameRateGame{
                     moveAvatarAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
-            }
-            if(controller.getType().equals(Controller.Type.KEYBOARD)){
                 inputManager.associateAction(
                     controller,
                     net.java.games.input.Component.Identifier.Key.A,
                     moveAvatarAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
-            }
-            if(controller.getType().equals(Controller.Type.KEYBOARD)){
                 inputManager.associateAction(
                     controller,
                     net.java.games.input.Component.Identifier.Key.S,
                     moveAvatarAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
-            }
-            if(controller.getType().equals(Controller.Type.KEYBOARD)){
                 inputManager.associateAction(
                     controller,
                     net.java.games.input.Component.Identifier.Key.D,
                     moveAvatarAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );
-            }
-            if(controller.getType().equals(Controller.Type.KEYBOARD)){
                 inputManager.associateAction(
                     controller,
                     net.java.games.input.Component.Identifier.Key.SPACE,
+                    avatarFireAction,
+                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
+            }
+            if(controller.getType().equals(Controller.Type.GAMEPAD)){
+                System.out.println("Gamepad!");
+                inputManager.associateAction(
+                    controller,
+                    net.java.games.input.Component.Identifier.Axis.X,
+                    moveAvatarAction,
+                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
+                inputManager.associateAction(
+                    controller,
+                    net.java.games.input.Component.Identifier.Axis.Y,
+                    moveAvatarAction,
+                    INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
+                );
+                inputManager.associateAction(
+                    controller,
+                    net.java.games.input.Component.Identifier.Button.A,
                     avatarFireAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );

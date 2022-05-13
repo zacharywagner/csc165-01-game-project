@@ -24,24 +24,32 @@ public class MoveAvatarAction extends AbstractInputAction{
         if(identifier.equals(net.java.games.input.Component.Identifier.Key.W)){
             //System.out.println("Moving the avatar forward!");
             avatarLocation.z -= avatar.getSpeed() * time;
-            avatar.setLocalLocation(avatarLocation);
         }
         else if(identifier.equals(net.java.games.input.Component.Identifier.Key.A)){
             //System.out.println("Moving the avatar left!");
             avatarLocation.x -= avatar.getSpeed() * time;
-            avatar.setLocalLocation(avatarLocation);
         }
         else if(identifier.equals(net.java.games.input.Component.Identifier.Key.S)){
             //System.out.println("Moving the avatar backward!");
             avatarLocation.z += avatar.getSpeed() * time;
-            avatar.setLocalLocation(avatarLocation);
         }
         else if(identifier.equals(net.java.games.input.Component.Identifier.Key.D)){
             //System.out.println("Moving the avatar right!");
             avatarLocation.x += avatar.getSpeed() * time;
-            avatar.setLocalLocation(avatarLocation);
         }
-        
+        else if(identifier.equals(net.java.games.input.Component.Identifier.Axis.X)){
+            float value = event.getValue();
+            if(Math.abs(value) > 0.1f){
+                avatarLocation.x += avatar.getSpeed() * time * value;
+            }
+        }
+        else if(identifier.equals(net.java.games.input.Component.Identifier.Axis.Y)){
+            float value = event.getValue();
+            if(Math.abs(value) > 0.1f){
+                avatarLocation.z += avatar.getSpeed() * time * value;
+            }
+        }
+        avatar.setLocalLocation(avatarLocation);
         if (protocolClient != null) {
             protocolClient.sendMoveMessage(avatarLocation);
         }
