@@ -8,6 +8,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import tage.GameObject;
+import tage.audio.*;
 import tage.shapes.AnimatedShape;
 import tage.shapes.AnimatedShape.EndType;
 
@@ -48,6 +49,11 @@ public class Boss extends Spaceship{
     private Random random;
     private Enemy enemy1, enemy2;
     private float spawnTimer = 0f;
+    private Sound initSound, shotgunSound, sniperSound;
+
+    public boolean getIsSpawning(){
+        return isSpawning;
+    }
 
     private enum State{
         NONE,
@@ -65,16 +71,27 @@ public class Boss extends Spaceship{
         bossController.start();
         random = new Random();
         setHealth(health);
+        
         if(getOurGame().getIsSinglePlayer() || (getOurGame().isConnected() && getOurGame().getIsHost())){
-            enemy1 = getOurGame().instantiateEnemy(new Vector3f(20f, 0f, 0f), this);
-            enemy1.propagateRotation(false);
-            enemy1.setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(90d), 0f, 1f, 0f));
+            enemy1 = getOurGame().instantiateEnemy(new Vector3f(20f, 10f, 0f), this);
+            //enemy1.propagateRotation(false);
+            enemy1.setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(180d), 0f, 1f, 0f));
             enemy1.setLocalScale(new Matrix4f().scale(1f/3f));
-            enemy2 = getOurGame().instantiateEnemy(new Vector3f(-20f, 0f, 0f), this);
-            enemy2.propagateRotation(false);
-            enemy2.setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(90d), 0f, 1f, 0f));
+            enemy2 = getOurGame().instantiateEnemy(new Vector3f(-20f, 10f, 0f), this);
+            //enemy2.propagateRotation(false);
+            enemy2.setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(180d), 0f, 1f, 0f));
             enemy2.setLocalScale(new Matrix4f().scale(1f/3f));
         }
+    }
+
+    public void initb(){
+        OurGame ourGame = getOurGame();
+        initSound = ourGame.createSound(ourGame.createAudioResource("Initializing", AudioResourceType.AUDIO_SAMPLE), SoundType.SOUND_EFFECT, 100, false);
+        initSound.setRollOff(0.1f);
+        shotgunSound = ourGame.createSound(ourGame.createAudioResource("TargetFound", AudioResourceType.AUDIO_SAMPLE), SoundType.SOUND_EFFECT, 100, false);
+        shotgunSound.setRollOff(0.1f);
+        sniperSound = ourGame.createSound(ourGame.createAudioResource("TargetAcquired", AudioResourceType.AUDIO_SAMPLE), SoundType.SOUND_EFFECT, 100, false);
+        sniperSound.setRollOff(0.1f);
     }
 
     public void shotgun(float offset){
@@ -84,6 +101,12 @@ public class Boss extends Spaceship{
             direction.rotateY((i + offset) * rad);
             getOurGame().getOrCreateProjectile(direction, false, getWorldLocation(), 16f);
         }
+    }
+
+
+    public void playInitSound(){
+        initSound.setLocation(getWorldLocation());
+        initSound.play();
     }
 
     public void fireAtPlayers(){
@@ -109,6 +132,8 @@ public class Boss extends Spaceship{
         }
         switch(state){
             case NONE:{
+                timer += getOurGame().getDeltaTime();
+                shotTimer += getOurGame().getDeltaTime();
                 break;
             }
             case SHOTGUN:{
@@ -132,10 +157,6 @@ public class Boss extends Spaceship{
             }
         }
         spawnTimer += getOurGame().getDeltaTime();
-        if(isSpawning && spawnTimer >= 10f){
-                spawnTimer = 0f;
-                //getOurGame().instantiateEnemy(location);
-        }
     }
 
     public BossController getBossController(){
@@ -147,7 +168,8 @@ public class Boss extends Spaceship{
         state = State.SNIPER;
         timer = 0f;
         getOurGame().getBossAnimatedShape().playAnimation("SUMMON", 0.75f, EndType.LOOP, 0);
-
+        sniperSound.setLocation(getWorldLocation());
+        sniperSound.play();
     }
 
     public void becomeShotgun(){
@@ -157,12 +179,19 @@ public class Boss extends Spaceship{
         shotTimer = 0f;
         shotgun(0);
         getOurGame().getBossAnimatedShape().playAnimation("SUMMON", 0.75f, EndType.LOOP, 0);
-
+        shotgunSound.setLocation(getWorldLocation());
+        shotgunSound.play();
     }
 
     public void becomeSpawner(){
+        getOurGame().getBossAnimatedShape().playAnimation("SUMMON", 0.75f, EndType.LOOP, 0);
+        state = State.NONE;
+        playInitSound();
+        enemy1.setIsDead(false);
+        enemy1.getRenderStates().enableRendering();
+        enemy2.setIsDead(false);
+        enemy2.getRenderStates().enableRendering();
         isSpawning = true;
-        spawnTimer = 10f;
     }
 
     @Override

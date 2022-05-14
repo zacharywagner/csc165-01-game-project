@@ -94,6 +94,7 @@ public class OurGame extends VariableFrameRateGame{
     private ImportedModel enemyModel;
     private TextureImage enemyTexture;
     private HashMap<Integer, Enemy> enemies = new HashMap<Integer, Enemy>();
+    private ArrayList<Enemy> enemies1 = new ArrayList<Enemy>();
     private HashMap<Integer, Spaceship> spaceships = new HashMap<Integer, Spaceship>();
     private HashMap<Integer, Projectile> projectiles = new HashMap<Integer, Projectile>();
     private int skybox;
@@ -125,6 +126,7 @@ public class OurGame extends VariableFrameRateGame{
 
     public void registerEnemy(Enemy enemy){
         enemies.put(enemy.getPhysicsObject().getUID(), enemy);
+        enemies1.add(enemy);
     }
 
     public Player getAvatar(){
@@ -282,6 +284,7 @@ public class OurGame extends VariableFrameRateGame{
         File file = new File("assets/scripts/initializeOurGame.js");
         runScript(file);
         initializePhysics();
+        
         avatar = new Player(this);
         avatar.setHealth((int)javaScriptEngine.get("playerHealth"));
         boss = new Boss(this, (int)javaScriptEngine.get("bossHealth"));
@@ -307,11 +310,16 @@ public class OurGame extends VariableFrameRateGame{
         setupTerrain();
         initializeCameras();
         initializeLights();
+        initializeAudio();
         if(!isSinglePlayer){
             initializeNetworking();
         }
         initializeInputs();
-        initializeAudio();
+        boss.initb();
+        enemies.forEach((key, value) -> {
+            value.inite();
+        });
+        boss.playInitSound();
     }
 
     public void setupTerrain(){
@@ -355,9 +363,23 @@ public class OurGame extends VariableFrameRateGame{
                 go.getPhysicsObject().setTransform(transform);
             } 
         }
+        /*
+        Object[] projs = activeProjectiles.toArray();
+        for(int i = 0; i < projs.length; i++){
+            for(int j = 0; j < enemies1.size(); j++){
+                System.out.println(enemies1.get(j).getWorldLocation());
+                Projectile proj1 = (Projectile)projs[i];
+                if(proj1.getIsPlayers() && proj1.getWorldLocation().distance(enemies1.get(j).getWorldLocation()) < 10f){
+                    enemies1.get(j).dealDamage(1);
+                    deactivateProjectile(proj1);
+                }
+            }
+        }
+        */
         checkForCollisions();
         if(isTouchingTerrain(avatar)){
             //System.out.println("Avatar is touching the terrain!");
+            avatar.dealDamage(100);
         }
         physicsEngine.update((float)(currentTime - previousTime));
         if(!isSinglePlayer){
@@ -557,6 +579,32 @@ public class OurGame extends VariableFrameRateGame{
         camera.setN(camera.getN().rotateAxis((float)Math.toRadians(-90f), camera.getU().x, camera.getU().y, camera.getU().z));
     }
 
+    public void reset(){
+        engine.getSceneGraph().removeGameObject(enemies1.get(1));
+        engine.getSceneGraph().removeGameObject(enemies1.get(0));
+        enemies = new HashMap<Integer, Enemy>();
+        enemies1 = new ArrayList<Enemy>();
+        engine.getSceneGraph().removeGameObject(boss);
+        boss = new Boss(this, (int)javaScriptEngine.get("bossHealth"));
+        boss.initb();
+        enemies.forEach((key, value) -> {
+            value.inite();
+        });
+
+        boss.getBossController().start();
+        floatController = new FloatController(engine, boss.getWorldLocation().x, (float)(double)javaScriptEngine.get("bossAmplitude"), (float)(double)javaScriptEngine.get("bossPeriod"));
+        floatController.addTarget(boss);
+        engine.getSceneGraph().addNodeController(floatController);
+        floatController.enable();
+        avatar.setHealth((int)javaScriptEngine.get("playerHealth"));
+        avatar.setLocalLocation((Vector3f)javaScriptEngine.get("playerStartLocation"));
+        Object[] projs = activeProjectiles.toArray();
+        for(int i  = 0; i < projs.length; i++){
+            Projectile proj = (Projectile)projs[i];
+            deactivateProjectile(proj);
+        }
+    }
+
     private void initializeLights(){
         Vector3f globalAmbient = (Vector3f)javaScriptEngine.get("lightGlobalAmbient");
         Light.setGlobalAmbient(globalAmbient.x, globalAmbient.y, globalAmbient.z);
@@ -625,7 +673,7 @@ public class OurGame extends VariableFrameRateGame{
                 );
                 inputManager.associateAction(
                     controller,
-                    net.java.games.input.Component.Identifier.Button.A,
+                    net.java.games.input.Component.Identifier.Button._1,
                     avatarFireAction,
                     INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN
                 );

@@ -39,7 +39,6 @@ public class Player extends Spaceship {
     @Override
     public void onDeath(){
         System.out.println("You died!");
-        setHealth(10);
-        setIsDead(false);
+        getOurGame().reset();
     }
 }
