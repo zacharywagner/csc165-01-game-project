@@ -65,9 +65,16 @@ public class Boss extends Spaceship{
         bossController.start();
         random = new Random();
         setHealth(health);
-        enemy1 = getOurGame().instantiateEnemy(new Vector3f(10f, 0f, 0f), this);
-        enemy1.setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(270d), 0f, 1f, 0f));
-        enemy2 = getOurGame().instantiateEnemy(new Vector3f(-10f, 0f, 0f), this);
+        if(getOurGame().getIsSinglePlayer() || (getOurGame().isConnected() && getOurGame().getIsHost())){
+            enemy1 = getOurGame().instantiateEnemy(new Vector3f(20f, 0f, 0f), this);
+            enemy1.propagateRotation(false);
+            enemy1.setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(90d), 0f, 1f, 0f));
+            enemy1.setLocalScale(new Matrix4f().scale(1f/3f));
+            enemy2 = getOurGame().instantiateEnemy(new Vector3f(-20f, 0f, 0f), this);
+            enemy2.propagateRotation(false);
+            enemy2.setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(90d), 0f, 1f, 0f));
+            enemy2.setLocalScale(new Matrix4f().scale(1f/3f));
+        }
     }
 
     public void shotgun(float offset){

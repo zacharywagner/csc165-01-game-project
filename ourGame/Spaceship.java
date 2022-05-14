@@ -70,7 +70,7 @@ public class Spaceship extends GameObject{
         PhysicsEngine physicsEngine = ourGame.getPhysicsEngine();
         uid = physicsEngine.nextUID();
         float values[] = new float[16];
-        double[] transform = OurGame.toDoubleArray(getLocalTranslation().get(values));
+        double[] transform = OurGame.toDoubleArray(getWorldTranslation().get(values));
         PhysicsObject physicsObject = ourGame.getPhysicsEngine().addBoxObject(uid, 1f, transform, size);
         physicsObject.setBounciness(0f);
         physicsObject.setFriction(0f);

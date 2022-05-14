@@ -2,7 +2,6 @@ package ourGame;
 
 import tage.ai.behaviortrees.*;
 
-//(•̀o•́)ง
 public class BossController {
     private BehaviorTree behaviorTree;
     private Boss boss;

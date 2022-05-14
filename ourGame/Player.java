@@ -5,12 +5,6 @@ import org.joml.Vector3f;
 
 import tage.*;
 
-/*
-{\__/}
-(●_●)
-(  >🌮  Want a taco?
-*/
-
 public class Player extends Spaceship {
 
     private float speed;

@@ -220,6 +220,10 @@ public class OurGame extends VariableFrameRateGame{
     public FloatController getFloatController(){
         return floatController;
     }
+
+    public boolean getIsHost(){
+        return isHost;
+    }
     
     public OurGame(){
         super();
@@ -347,7 +351,7 @@ public class OurGame extends VariableFrameRateGame{
                 go.getPhysicsObject().setLinearVelocity(new float[]{0f, 1f, 0f});
                 go.getPhysicsObject().setAngularVelocity(new float[]{0f, 1f, 0f});
                 float values[] = new float[16];
-                double[] transform = toDoubleArray(go.getLocalTranslation().get(values));
+                double[] transform = toDoubleArray(go.getWorldTranslation().get(values));
                 go.getPhysicsObject().setTransform(transform);
             } 
         }
