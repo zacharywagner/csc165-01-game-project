@@ -31,7 +31,7 @@ public class Enemy extends Spaceship {
     }
 
     public void updateEnemy(){
-        if(System.currentTimeMillis() - lastFireTime > 300 && !getIsDead() && !getOurGame().getBoss().getIsDead()){
+        if(System.currentTimeMillis() - lastFireTime > 200 && !getIsDead() && !getOurGame().getBoss().getIsDead()){
             lastFireTime = System.currentTimeMillis();
             Vector3f position = getWorldLocation();
             Vector3f direction = getOurGame().getAvatar().getWorldLocation().sub(position);

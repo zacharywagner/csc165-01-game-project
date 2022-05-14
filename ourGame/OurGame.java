@@ -389,7 +389,9 @@ public class OurGame extends VariableFrameRateGame{
     }
 
     private void updateHUD(){
-        String hud1 = avatar.getHealth() + " <3";
+        String hud1 = "Player's Will To Live" + avatar.getHealth() + " <3";
+        String hud2 = " | Dr. Mechazord's Life Force: " + avatar.getHealth();
+        hud1 += hud2;
         float mainRelativeLeft = engine.getRenderSystem().getViewport("MAIN").getRelativeLeft();
         float mainRelativeBottom = engine.getRenderSystem().getViewport("MAIN").getRelativeBottom();
         float mainActualWidth = engine.getRenderSystem().getViewport("MAIN").getActualWidth();
@@ -477,7 +479,7 @@ public class OurGame extends VariableFrameRateGame{
                 }
             }
             else if(projectile1 != null && activeProjectiles.contains(projectile1)){
-                if(spaceship1.getIsFriend() != projectile1.getIsPlayers()){
+                if(spaceship1.getIsFriend() != projectile1.getIsPlayers() && !spaceship1.getIsDead()){
                     // System.out.println("A spaceship was hit by a projectile!");
                     //projectile1.setTimer(8.1f);
                     spaceship1.dealDamage(1);
@@ -485,7 +487,7 @@ public class OurGame extends VariableFrameRateGame{
                 }
             }
             else if(projectile2 != null && activeProjectiles.contains(projectile2)){
-                if(spaceship1.getIsFriend() != projectile2.getIsPlayers()){
+                if(spaceship1.getIsFriend() != projectile2.getIsPlayers() && !spaceship1.getIsDead()){
                     // System.out.println("A spaceship was hit by a projectile!");
                     //projectile2.setTimer(8.1f);
                     spaceship1.dealDamage(1);
@@ -495,7 +497,7 @@ public class OurGame extends VariableFrameRateGame{
         }
         else if(spaceship2 != null){
             if(projectile1 != null && activeProjectiles.contains(projectile1)){
-                if(spaceship2.getIsFriend() != projectile1.getIsPlayers()){
+                if(spaceship2.getIsFriend() != projectile1.getIsPlayers() && !spaceship2.getIsDead()){
                     // System.out.println("A spaceship was hit by a projectile!");
                     //projectile1.setTimer(8.1f);
                     spaceship2.dealDamage(1);
@@ -503,7 +505,7 @@ public class OurGame extends VariableFrameRateGame{
                 }
             }
             else if(projectile2 != null && activeProjectiles.contains(projectile2)){
-                if(spaceship2.getIsFriend() != projectile2.getIsPlayers()){
+                if(spaceship2.getIsFriend() != projectile2.getIsPlayers() && !spaceship2.getIsDead()){
                     // System.out.println("A spaceship was hit by a projectile!");
                     //projectile2.setTimer(8.1f);
                     spaceship2.dealDamage(1);

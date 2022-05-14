@@ -15,6 +15,6 @@ with(JavaPackages){
     var terrainScale = new Vector3f(48.0, 24.0, 48.0);
     var bossAmplitude = 20.0;
     var bossPeriod = 2.0;
-    var bossHealth = 210;
+    var bossHealth = 600;
     var playerHealth = 100;
 }
