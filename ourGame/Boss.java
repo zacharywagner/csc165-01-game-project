@@ -2,6 +2,7 @@ package ourGame;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Vector;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -10,6 +11,33 @@ import tage.GameObject;
 import tage.shapes.AnimatedShape;
 import tage.shapes.AnimatedShape.EndType;
 
+/*
+███████▓█████▓▓╬╬╬╬╬╬╬╬▓███▓╬╬╬╬╬╬╬▓╬╬▓█ 
+████▓▓▓▓╬╬▓█████╬╬╬╬╬╬███▓╬╬╬╬╬╬╬╬╬╬╬╬╬█ 
+███▓▓▓▓╬╬╬╬╬╬▓██╬╬╬╬╬╬▓▓╬╬╬╬╬╬╬╬╬╬╬╬╬╬▓█ 
+████▓▓▓╬╬╬╬╬╬╬▓█▓╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬▓█ 
+███▓█▓███████▓▓███▓╬╬╬╬╬╬▓███████▓╬╬╬╬▓█ 
+████████████████▓█▓╬╬╬╬╬▓▓▓▓▓▓▓▓╬╬╬╬╬╬╬█ 
+███▓▓▓▓▓▓▓╬╬▓▓▓▓▓█▓╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬▓█ 
+████▓▓▓╬╬╬╬▓▓▓▓▓▓█▓╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬▓█ 
+███▓█▓▓▓▓▓▓▓▓▓▓▓▓▓▓╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬▓█ 
+█████▓▓▓▓▓▓▓▓█▓▓▓█▓╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬▓█ 
+█████▓▓▓▓▓▓▓██▓▓▓█▓╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬██ 
+█████▓▓▓▓▓████▓▓▓█▓╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬██ 
+████▓█▓▓▓▓██▓▓▓▓██╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬██ 
+████▓▓███▓▓▓▓▓▓▓██▓╬╬╬╬╬╬╬╬╬╬╬╬█▓╬▓╬╬▓██ 
+█████▓███▓▓▓▓▓▓▓▓████▓▓╬╬╬╬╬╬╬█▓╬╬╬╬╬▓██ 
+█████▓▓█▓███▓▓▓████╬▓█▓▓╬╬╬▓▓█▓╬╬╬╬╬╬███ 
+██████▓██▓███████▓╬╬╬▓▓╬▓▓██▓╬╬╬╬╬╬╬▓███ 
+███████▓██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓╬╬╬╬╬╬╬╬╬╬╬████ 
+███████▓▓██▓▓▓▓▓╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬▓████ 
+████████▓▓▓█████▓▓╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬╬▓█████ 
+█████████▓▓▓█▓▓▓▓▓███▓╬╬╬╬╬╬╬╬╬╬╬▓██████ 
+██████████▓▓▓█▓▓▓╬▓██╬╬╬╬╬╬╬╬╬╬╬▓███████ 
+███████████▓▓█▓▓▓▓███▓╬╬╬╬╬╬╬╬╬▓████████ 
+██████████████▓▓▓███▓▓╬╬╬╬╬╬╬╬██████████ 
+███████████████▓▓▓██▓▓╬╬╬╬╬╬▓███████████
+*/
 
 public class Boss extends Spaceship{
     private BossController bossController;
@@ -18,23 +46,28 @@ public class Boss extends Spaceship{
     private float timer = 0f;
     private float shotTimer = 0f;
     private Random random;
-    
+    private Enemy enemy1, enemy2;
+    private float spawnTimer = 0f;
+
     private enum State{
         NONE,
         SHOTGUN,
         SNIPER    
     }
 
-    public Boss(OurGame ourGame){
+    public Boss(OurGame ourGame, int health){
         super(GameObject.root(), ourGame.getBossAnimatedShape(), ourGame, new float[]{24f, 32f, 12f}, ourGame.getBossTexture(), false);
-        ourGame.getBossAnimatedShape().playAnimation("KICK", 0.5f, EndType.LOOP, 0);
+        ourGame.getBossAnimatedShape().playAnimation("KICK", 0.75f, EndType.LOOP, 0);
         setLocalLocation(new Vector3f(0f, -10f, -28f));
         setLocalScale(new Matrix4f().scale(3f));
         setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(270d), 0f, 1f, 0f));
         bossController = new BossController(this, ourGame);
         bossController.start();
-        setHealth(5000);
         random = new Random();
+        setHealth(health);
+        enemy1 = getOurGame().instantiateEnemy(new Vector3f(10f, 0f, 0f), this);
+        enemy1.setLocalRotation(new Matrix4f().rotate((float)Math.toRadians(270d), 0f, 1f, 0f));
+        enemy2 = getOurGame().instantiateEnemy(new Vector3f(-10f, 0f, 0f), this);
     }
 
     public void shotgun(float offset){
@@ -61,8 +94,11 @@ public class Boss extends Spaceship{
     }
 
     public void updateBoss(){
-        if(timer > 5.5f){
-            getOurGame().getFloatController().enable();
+        if(timer > 5.5f && getHealth() > 0){
+            if(!getOurGame().getFloatController().isEnabled()){
+                getOurGame().getBossAnimatedShape().playAnimation("KICK", 0.75f, EndType.LOOP, 0);
+                getOurGame().getFloatController().enable();
+            }
         }
         switch(state){
             case NONE:{
@@ -71,8 +107,8 @@ public class Boss extends Spaceship{
             case SHOTGUN:{
                 timer += getOurGame().getDeltaTime();
                 shotTimer += getOurGame().getDeltaTime();
-                System.out.println(timer);
-                if(shotTimer >= .35f && timer < 5.5f){
+                //System.out.println(timer);
+                if(shotTimer >= .35f && timer < 5.5f && !getIsDead()){
                     shotgun(random.nextFloat());
                     shotTimer = 0f;
                 }
@@ -81,12 +117,17 @@ public class Boss extends Spaceship{
             case SNIPER:{
                 timer += getOurGame().getDeltaTime();
                 shotTimer += getOurGame().getDeltaTime();
-                if(shotTimer >= .03f && timer < 5.5f){
+                if(shotTimer >= .03f && timer < 5.5f && !getIsDead()){
                     fireAtPlayers();
                     shotTimer = 0f;
                 }
                 break;
             }
+        }
+        spawnTimer += getOurGame().getDeltaTime();
+        if(isSpawning && spawnTimer >= 10f){
+                spawnTimer = 0f;
+                //getOurGame().instantiateEnemy(location);
         }
     }
 
@@ -98,6 +139,8 @@ public class Boss extends Spaceship{
         getOurGame().getFloatController().disable();
         state = State.SNIPER;
         timer = 0f;
+        getOurGame().getBossAnimatedShape().playAnimation("SUMMON", 0.75f, EndType.LOOP, 0);
+
     }
 
     public void becomeShotgun(){
@@ -106,9 +149,19 @@ public class Boss extends Spaceship{
         timer = 0f;
         shotTimer = 0f;
         shotgun(0);
+        getOurGame().getBossAnimatedShape().playAnimation("SUMMON", 0.75f, EndType.LOOP, 0);
+
     }
 
     public void becomeSpawner(){
         isSpawning = true;
+        spawnTimer = 10f;
+    }
+
+    @Override
+    public void onDeath(){
+        super.onDeath();
+        getOurGame().getBossAnimatedShape().playAnimation("DEAD", 0.5f, EndType.PAUSE, 0);
+        getOurGame().getFloatController().disable();
     }
 }

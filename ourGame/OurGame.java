@@ -274,9 +274,13 @@ public class OurGame extends VariableFrameRateGame{
 
     @Override
     public void buildObjects() {
+        initializeScriptEngines();
+        File file = new File("assets/scripts/initializeOurGame.js");
+        runScript(file);
         initializePhysics();
         avatar = new Player(this);
-        boss = new Boss(this);
+        avatar.setHealth((int)javaScriptEngine.get("playerHealth"));
+        boss = new Boss(this, (int)javaScriptEngine.get("bossHealth"));
         terrain1 = new GameObject(GameObject.root(), terrainShape, terrainTexture2);
         terrain1.setHeightMap(terrainHeightMap2);
         terrain2 = new GameObject(GameObject.root(), terrainShape, terrainTexture1);
@@ -290,9 +294,6 @@ public class OurGame extends VariableFrameRateGame{
     @Override
     public void initializeGame() {
         currentTime = System.currentTimeMillis();
-        initializeScriptEngines();
-        File file = new File("assets/scripts/initializeOurGame.js");
-        runScript(file);
         avatar.setSpeed((float)(double)javaScriptEngine.get("playerSpeed"));
         avatar.setLocalLocation((Vector3f)javaScriptEngine.get("playerStartLocation"));
         floatController = new FloatController(engine, boss.getWorldLocation().x, (float)(double)javaScriptEngine.get("bossAmplitude"), (float)(double)javaScriptEngine.get("bossPeriod"));
@@ -307,7 +308,6 @@ public class OurGame extends VariableFrameRateGame{
         }
         initializeInputs();
         initializeAudio();
-        instantiateEnemy(new Vector3f(0f, 0f, 0f));
     }
 
     public void setupTerrain(){
@@ -359,6 +359,21 @@ public class OurGame extends VariableFrameRateGame{
         if(!isSinglePlayer){
             processNetworking((float)elapsedTime);
         }
+        updateHUD();
+    }
+
+    private void updateHUD(){
+        String hud1 = avatar.getHealth() + " <3";
+        float mainRelativeLeft = engine.getRenderSystem().getViewport("MAIN").getRelativeLeft();
+        float mainRelativeBottom = engine.getRenderSystem().getViewport("MAIN").getRelativeBottom();
+        float mainActualWidth = engine.getRenderSystem().getViewport("MAIN").getActualWidth();
+        float mainActualHeight = engine.getRenderSystem().getViewport("MAIN").getActualHeight();
+        (engine.getHUDmanager()).setHUD1(
+            hud1,
+            new Vector3f(1f, 0f, 0f),
+            (int)(mainRelativeLeft * mainActualWidth) + 5,
+            (int)(mainRelativeBottom * mainActualHeight) + 5
+        );
     }
 
     private void updateTerrain(){
@@ -439,6 +454,7 @@ public class OurGame extends VariableFrameRateGame{
                 if(spaceship1.getIsFriend() != projectile1.getIsPlayers()){
                     // System.out.println("A spaceship was hit by a projectile!");
                     //projectile1.setTimer(8.1f);
+                    spaceship1.dealDamage(1);
                     deactivateProjectile(projectile1);
                 }
             }
@@ -446,6 +462,7 @@ public class OurGame extends VariableFrameRateGame{
                 if(spaceship1.getIsFriend() != projectile2.getIsPlayers()){
                     // System.out.println("A spaceship was hit by a projectile!");
                     //projectile2.setTimer(8.1f);
+                    spaceship1.dealDamage(1);
                     deactivateProjectile(projectile2);
                 }
             }
@@ -455,6 +472,7 @@ public class OurGame extends VariableFrameRateGame{
                 if(spaceship2.getIsFriend() != projectile1.getIsPlayers()){
                     // System.out.println("A spaceship was hit by a projectile!");
                     //projectile1.setTimer(8.1f);
+                    spaceship2.dealDamage(1);
                     deactivateProjectile(projectile1);
                 }
             }
@@ -462,6 +480,7 @@ public class OurGame extends VariableFrameRateGame{
                 if(spaceship2.getIsFriend() != projectile2.getIsPlayers()){
                     // System.out.println("A spaceship was hit by a projectile!");
                     //projectile2.setTimer(8.1f);
+                    spaceship2.dealDamage(1);
                     deactivateProjectile(projectile2);
                 }
             }
@@ -700,9 +719,10 @@ public class OurGame extends VariableFrameRateGame{
         }
     }
 
-    public void instantiateEnemy(Vector3f location){
-        Enemy enemy = new Enemy(this, location);
+    public Enemy instantiateEnemy(Vector3f location, GameObject parent){
+        Enemy enemy = new Enemy(this, location, parent);
         enemies.put(enemy.getUid(), enemy);
+        return enemy;
     }
 
     public void removeEnemy(Enemy enemy){
@@ -739,7 +759,7 @@ public class OurGame extends VariableFrameRateGame{
         backgroundMusicSound = createSound(audioResource, SoundType.SOUND_MUSIC, 25, true);
         backgroundMusicSound.play();
         createAudioResource("laser9", AudioResourceType.AUDIO_SAMPLE);
-        setEarParameters();
+        //setEarParameters();
     }
 
     private void setEarParameters(){

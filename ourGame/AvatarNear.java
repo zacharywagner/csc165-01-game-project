@@ -17,7 +17,7 @@ public class AvatarNear extends BTCondition {
     }
 
     protected boolean check(){
-        System.out.println("Check!");
+        //System.out.println("Check!");
         GameObject avatar = boss.getOurGame().getAvatar();
         Vector3f worldLocation = boss.getWorldLocation();
         float distance = avatar.getWorldLocation().z - worldLocation.z;

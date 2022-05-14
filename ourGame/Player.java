@@ -5,6 +5,12 @@ import org.joml.Vector3f;
 
 import tage.*;
 
+/*
+{\__/}
+(●_●)
+(  >🌮  Want a taco?
+*/
+
 public class Player extends Spaceship {
 
     private float speed;
@@ -34,5 +40,12 @@ public class Player extends Spaceship {
         if(localLocation.z <- 34.6f) localLocation.z = -34.6f;
         else if(localLocation.z > 33.75f) localLocation.z = 33.75f;
         setLocalLocation(localLocation);
+    }
+
+    @Override
+    public void onDeath(){
+        System.out.println("You died!");
+        setHealth(10);
+        setIsDead(false);
     }
 }

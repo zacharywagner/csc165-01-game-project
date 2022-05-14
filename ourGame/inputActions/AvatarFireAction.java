@@ -31,6 +31,7 @@ public class AvatarFireAction extends AbstractInputAction{
         boolean isPlayers = true;
         float speed = 64f;
         ourGame.getOrCreateProjectile(direction, isPlayers, position, speed);
+        //ourGame.getAvatar().playSound();
         if(!ourGame.getIsSinglePlayer()){
             protocolClient.sendSendShotMessage(direction, isPlayers, position, speed);
         }
