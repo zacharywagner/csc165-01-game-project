@@ -722,6 +722,9 @@ public class OurGame extends VariableFrameRateGame{
     public Enemy instantiateEnemy(Vector3f location, GameObject parent){
         Enemy enemy = new Enemy(this, location, parent);
         enemies.put(enemy.getUid(), enemy);
+        if(protocolClient != null) {
+            protocolClient.sendCreateNpcMessage(enemy.getUid(), location);
+        }
         return enemy;
     }
 
@@ -729,6 +732,9 @@ public class OurGame extends VariableFrameRateGame{
         enemies.remove(enemy.getUid());
         enemy.getRenderStates().disableRendering();
         engine.getSceneGraph().removeGameObject(enemy);
+        if(protocolClient != null) {
+            protocolClient.sendDestroyNpcMessage(enemy.getUid());
+        }
     }
 
     
