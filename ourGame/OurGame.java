@@ -389,8 +389,8 @@ public class OurGame extends VariableFrameRateGame{
     }
 
     private void updateHUD(){
-        String hud1 = "Player's Will To Live" + avatar.getHealth() + " <3";
-        String hud2 = " | Dr. Mechazord's Life Force: " + avatar.getHealth();
+        String hud1 = "Player's Will To Live: " + avatar.getHealth() + " <3";
+        String hud2 = "   |   Dr. Mechazord's Life Force: " + boss.getHealth();
         hud1 += hud2;
         float mainRelativeLeft = engine.getRenderSystem().getViewport("MAIN").getRelativeLeft();
         float mainRelativeBottom = engine.getRenderSystem().getViewport("MAIN").getRelativeBottom();

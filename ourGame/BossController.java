@@ -19,7 +19,7 @@ public class BossController {
     }
 
     public void update(){
-        if(timer >= 12f && boss.getHealth() > 0){
+        if(timer >= 10f && boss.getHealth() > 0){
             behaviorTree.update(timer);
             timer = 0f;
         }
