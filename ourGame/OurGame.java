@@ -766,7 +766,8 @@ public class OurGame extends VariableFrameRateGame{
             System.out.println("The audio manager did not initialize!");
         }
         AudioResource audioResource = createAudioResource("backgroundMusic", AudioResourceType.AUDIO_STREAM);
-        backgroundMusicSound = createSound(audioResource, SoundType.SOUND_MUSIC, 25, true);
+        backgroundMusicSound = createSound(audioResource, SoundType.SOUND_MUSIC, 50, true);
+        backgroundMusicSound.setRollOff(0f);
         backgroundMusicSound.play();
         createAudioResource("laser9", AudioResourceType.AUDIO_SAMPLE);
         //setEarParameters();
